@@ -32,7 +32,7 @@ public class LevelGrid : MonoBehaviour
     List<int> colTri = new List<int>();
     int colCount;
 
-    const float TILE_SCALE = 0.32f;
+    public const float TILE_SCALE = 0.32f;
     const int MAX_MAP_SIZE = 64;
     private int tileCount;
 
