@@ -29,20 +29,30 @@ public class Player : MonoBehaviour {
 
     private void Update() {
         controller.RotateHandsWithMouseUpdate(arms, head, this);
+       Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+       // Debug.Log(mousePosition);
         if(Input.GetButtonDown("Fire1")) {
             RaycastHit hit;
-            if(Physics.Raycast(gun.position, gun.TransformDirection(Vector2.right * 0.5f), out hit)){
+            if(Physics.Raycast(transform.position, gun.transform.TransformDirection(Vector3.right), out hit))
+            {
                 Debug.Log("Ray Test!");
-                Vector2 point = new Vector2(hit.point.x, hit.point.y);
+                Vector2 point = new Vector2(hit.point.x, hit.point.y)/levelGrid.TILE_SCALE;
+                Debug.Log("A" + hit.point);
                 point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
-                Debug.DrawLine(gun.position, new Vector2(Mathf.RoundToInt(point.x - .5f), Mathf.RoundToInt(point.y + .5f)), Color.red, 5);
-                levelGrid.DestroyTileAt(Mathf.RoundToInt(point.x - .5f), Mathf.RoundToInt(point.y + .5f));
+                Debug.Log("B" + hit.point);
+                Debug.DrawLine(transform.position, hit.point, Color.red, 5);
+                levelGrid.DestroyTileAt(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
             }
-            else {
-                Debug.DrawRay(gun.position, gun.TransformDirection(Vector2.right), Color.blue, 5);
+            else
+            {
+                Debug.DrawRay(transform.position, gun.transform.TransformDirection(Vector3.right), Color.blue, 5);
             }
+
+
+
+
         }
-        
+
     }
 
     void FixedUpdate() {

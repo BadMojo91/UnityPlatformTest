@@ -17,8 +17,7 @@ public class LevelEditor : Editor {
         int w,h, x,y, x2,y2;
         DrawDefaultInspector();
         LevelGrid levelGrid = (LevelGrid)target;
-        //GameObject levelObject = GameObject.Find("LevelGrid");
-        Texture2D mapImage = levelGrid.currentMapImage;
+
 
         GUILayout.BeginHorizontal();
         width = GUILayout.TextField(width);
@@ -60,7 +59,6 @@ public class LevelEditor : Editor {
         }
 
         if (GUILayout.Button("Build Mesh")) {
-            //levelGrid.GenerateTerrain();
             levelGrid.BuildMesh();
             levelGrid.UpdateMeshData();
         }
@@ -70,12 +68,6 @@ public class LevelEditor : Editor {
 
         if(GUILayout.Button("DestroyTileAt")) {
             levelGrid.DestroyTileAt(w,h);
-        }
-
-        
-
-        if(GUILayout.Button("Image To Map")) {
-            levelGrid.ConvertImageToMap(mapImage);
         }
 
     }
