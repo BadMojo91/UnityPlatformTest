@@ -5,36 +5,39 @@ using System.Collections;
 [ExecuteInEditMode]
 public class LevelGrid : MonoBehaviour
 {
-    //public Sprite defaultSprite;
-    //public Sprite activeSprite;
-    //public GameObject[,] gridPos = new GameObject[MAX_MAP_SIZE, MAX_MAP_SIZE];
-    //public bool drawMode;
-
-    //public Map currentMap = new Map();
-    //public Texture2D currentMapImage;
-    //public Tile[] tileArray;
-    //public Color[] tileColors;
-    //public GameObject defaultTile;
-
-    public Texture2D[] tex;
-    List<SubMeshes> subMeshes = new List<SubMeshes>();
+    //Grid
     public Block[,] blocks;
-    [SerializeField] private BlockData[] blockData;
-    private List<Vector3> verts = new List<Vector3>();
-    private List<int> tri = new List<int>();
-    private List<Vector2> uvs = new List<Vector2>();
+    public BlockData[] blockData;
+    public float TILE_SCALE = 0.32f; //size of grid tiles
+    const int MAX_CHUNK_SIZE = 64; //max size of grid chunk
 
+    //Mesh
     private Mesh mesh;
+    List<SubMeshes> subMeshes = new List<SubMeshes>();
+    List<Vector3> verts = new List<Vector3>();
+    List<int> tri = new List<int>();
+    List<Vector2> uvs = new List<Vector2>();
+    int colCount; //collider index for triangles
+    int tileCount;//mesh index for triangles
+    //Collider
+    List<Vector3> colVerts = new List<Vector3>();
+    List<int> colTri = new List<int>();
+    
+    //Textures
+
+    //Inspector
+    [Header("Mesh")]
     public MeshFilter meshFilter;
     public MeshRenderer meshRend;
     public MeshCollider col;
-    List<Vector3> colVerts = new List<Vector3>();
-    List<int> colTri = new List<int>();
-    int colCount;
 
-    public float TILE_SCALE = 0.32f;
-    const int MAX_MAP_SIZE = 64;
-    private int tileCount;
+    [Header("Textures")]
+    public Texture2D[] tex;
+
+    [Header("Terrain")]
+    public int seed;
+    public float scale;
+    public float magnitude;
 
     private void Awake()
     {
@@ -42,8 +45,8 @@ public class LevelGrid : MonoBehaviour
     }
     private void Start()
     {
-        BuildMesh();
-        UpdateMeshData();
+        //BuildMesh();
+        //UpdateMeshData();
     }
 
     //public void ConvertImageToMap(Texture2D image)
@@ -52,9 +55,9 @@ public class LevelGrid : MonoBehaviour
     //    int h = image.height;
     //    int w = image.width;
 
-    //    if (h > MAX_MAP_SIZE || w > MAX_MAP_SIZE)
+    //    if (h > MAX_CHUNK_SIZE || w > MAX_CHUNK_SIZE)
     //    {
-    //        Debug.LogError("Image size exceeds MAX_MAP_SIZE.");
+    //        Debug.LogError("Image size exceeds MAX_CHUNK_SIZE.");
     //        return;
     //    }
     //    else
@@ -118,28 +121,26 @@ public class LevelGrid : MonoBehaviour
     }
     public void GenerateTerrain()
     {
-
-        Block[,] b = new Block[MAX_MAP_SIZE, MAX_MAP_SIZE];
+        DestroyAllTiles();
+        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
 
         for(int y = 0; y < b.GetLength(1); y++)
         {
             for(int x = 0; x < b.GetLength(0); x++)
             {
                 Block block = new Block();
-                if(Random.Range(0, 100) < 50)
+                float perlinNoise = Mathf.PerlinNoise(x*scale, y*scale) / magnitude * (seed+1);
+
+                //Debug.Log(perlinNoise);
+
+                if(perlinNoise*60 < y)
                     block.subMesh = 0;
-                else if(y > 50)
-                    block.subMesh = 1;
-                else if(y > 45)
+                else if(perlinNoise > 0.2f)
                     block.subMesh = 2;
-                else if(y > 30)
+                else if(perlinNoise > 0.1f)
                     block.subMesh = 3;
-                else if(y > 20)
-                    block.subMesh = 4;
-                else if(y > 15)
-                    block.subMesh = 5;
                 else
-                    block.subMesh = 1;
+                    block.subMesh = 0;
 
                 b[x, y] = block;
             }
@@ -148,7 +149,7 @@ public class LevelGrid : MonoBehaviour
         blocks = b;
         SaveLevelData();
     }
-    public void BuildMesh()
+    public void BuildMesh() //builds mesh based on blocks[,]
     {
         LoadLevelData();
         subMeshes.Clear();
@@ -158,28 +159,18 @@ public class LevelGrid : MonoBehaviour
             subMeshes.Add(sm);
         }
 
-        for(int y = 0; y < MAX_MAP_SIZE; y++){
-            for(int x = 0; x < MAX_MAP_SIZE; x++){
-                //try
-                // {
+        for(int y = 0; y < MAX_CHUNK_SIZE; y++){
+            for(int x = 0; x < MAX_CHUNK_SIZE; x++){
+
                 if(blocks[x, y].subMesh != 0)
-                {
-                    GenerateCollider(x, y);
-                }
+                    GenerateCollider(x, y); //only generate collider on solid tiles
 
-                CreateVerts(x, y);
-
+                CreateVerts(x, y); 
                 CreateTile(blocks[x, y], x, y);
-                //  }
-                // catch(System.NullReferenceException ex)
-                // {
-                //     Debug.Log("error");
-                // }
+               
             }
         }
         tileCount = 0;
-
-
     }
     private void ColTriangles()
     {
@@ -317,6 +308,9 @@ public class LevelGrid : MonoBehaviour
     public void CreateTileAt(int x, int y, int t)
     {
         blocks[x, y].subMesh = t;
+        SaveLevelData();
+        BuildMesh();
+        UpdateMeshData();
     }
     public void CreateLineAt(Vector2 start, Vector2 end, int t)
     {
@@ -332,7 +326,7 @@ public class LevelGrid : MonoBehaviour
     }
     public void DestroyAllTiles()
     {
-        Block[,] b = new Block[MAX_MAP_SIZE, MAX_MAP_SIZE];
+        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
 
         for(int y = 0; y < b.GetLength(1); y++)
         {
@@ -343,6 +337,7 @@ public class LevelGrid : MonoBehaviour
             }
         }
         blocks = b;
+        SaveLevelData();
         BuildMesh();
         UpdateMeshData();
     }
@@ -361,7 +356,7 @@ public class LevelGrid : MonoBehaviour
     }
     public void LoadLevelData()
     {
-        Block[,] b = new Block[MAX_MAP_SIZE, MAX_MAP_SIZE];
+        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
         for(int y = 0; y < b.GetLength(1); y++)
         {
             for(int x = 0; x < b.GetLength(0); x++)
@@ -376,7 +371,7 @@ public class LevelGrid : MonoBehaviour
         }
 
         blocks = b;
-
+        SaveLevelData();
     }
 }
 [System.Serializable]

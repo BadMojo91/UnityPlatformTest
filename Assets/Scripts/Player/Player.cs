@@ -35,24 +35,33 @@ public class Player : MonoBehaviour {
             RaycastHit hit;
             if(Physics.Raycast(transform.position, gun.transform.TransformDirection(Vector3.right), out hit))
             {
-                Debug.Log("Ray Test!");
+                //Debug.Log("Ray Test!");
                 Vector2 point = new Vector2(hit.point.x, hit.point.y)/levelGrid.TILE_SCALE;
-                Debug.Log("A" + hit.point);
+                //Debug.Log("A" + hit.point);
                 point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
-                Debug.Log("B" + hit.point);
-                Debug.DrawLine(transform.position, hit.point, Color.red, 5);
+                //Debug.Log("B" + Mathf.RoundToInt(point.x - 0.5f) + " " + Mathf.RoundToInt(point.y + 0.5f));
+               // Debug.DrawLine(transform.position, point, Color.red, 5);
                 levelGrid.DestroyTileAt(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
             }
             else
             {
-                Debug.DrawRay(transform.position, gun.transform.TransformDirection(Vector3.right), Color.blue, 5);
+                //Debug.DrawRay(transform.position, gun.transform.TransformDirection(Vector3.right), Color.blue, 5);
             }
 
-
-
+           
+;
 
         }
 
+        if(Input.GetButtonDown("Fire2"))
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition)/levelGrid.TILE_SCALE;
+            mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0);
+            mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
+            
+            Debug.Log(mousePos);
+            levelGrid.CreateTileAt((int)mousePos.x, (int)mousePos.y, 1);
+        }
     }
 
     void FixedUpdate() {
