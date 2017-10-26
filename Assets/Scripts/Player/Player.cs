@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using protagonist;
+
 public class Player : MonoBehaviour {
 
     public Controller controller;
@@ -23,47 +24,56 @@ public class Player : MonoBehaviour {
     public GameObject target;
     LevelGrid levelGrid;
 
+    public Vector2 currentBlock;
+
     private void Awake() {
         levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
     }
 
     private void Update() {
-        controller.RotateHandsWithMouseUpdate(arms, head, this);
-       Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-       // Debug.Log(mousePosition);
-        if(Input.GetButtonDown("Fire1")) {
-            RaycastHit hit;
-            if(Physics.Raycast(transform.position, gun.transform.TransformDirection(Vector3.right), out hit))
-            {
-                //Debug.Log("Ray Test!");
-                Vector2 point = new Vector2(hit.point.x, hit.point.y)/levelGrid.TILE_SCALE;
-                //Debug.Log("A" + hit.point);
-                point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
-                //Debug.Log("B" + Mathf.RoundToInt(point.x - 0.5f) + " " + Mathf.RoundToInt(point.y + 0.5f));
-               // Debug.DrawLine(transform.position, point, Color.red, 5);
-                levelGrid.DestroyTileAt(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
-            }
-            else
-            {
-                //Debug.DrawRay(transform.position, gun.transform.TransformDirection(Vector3.right), Color.blue, 5);
-            }
+        controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
 
-           
-;
+        if(Input.GetButtonDown("Fire1"))
+            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
+                levelGrid.DestroyTileAt((int)currentBlock.x, (int)currentBlock.y);
 
-        }
-
-        if(Input.GetButtonDown("Fire2"))
+        if(Input.GetButton("Fire2"))
         {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition)/levelGrid.TILE_SCALE;
-            mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0);
-            mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
-            
-            Debug.Log(mousePos);
-            levelGrid.CreateTileAt((int)mousePos.x, (int)mousePos.y, 1);
+            ReplaceAtMousePos(1);
         }
+
+        
     }
 
+    void ReplaceAtMousePos(int tile)
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition) / levelGrid.TILE_SCALE;
+        mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0) * -0.5f;
+        mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
+
+        //Debug.Log(mousePos);
+        int x = (int)mousePos.x;
+        int y = (int)mousePos.y;
+        if(levelGrid.blocks[x + 1, y].subMesh != 0 || levelGrid.blocks[x - 1, y].subMesh != 0 || levelGrid.blocks[x, y + 1].subMesh != 0 || levelGrid.blocks[x, y - 1].subMesh != 0)
+            levelGrid.CreateTileAt((int)mousePos.x, (int)mousePos.y, tile, true);
+    }
+
+    bool TraceLine(Vector3 pos, Vector3 end)
+    {
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, gun.transform.TransformDirection(Vector3.right), out hit))
+        {
+            Vector2 point = new Vector2(hit.point.x, hit.point.y) / levelGrid.TILE_SCALE;
+            point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
+            currentBlock = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
+            return true;
+        }
+        else
+        {
+            currentBlock = Vector2.zero;
+            return false;
+        }
+    }
     void FixedUpdate() {
         controller.MoveUpdate(this, legsAnim, transform, gun);
         controller.PhysicsUpdate(transform, GetComponent<Rigidbody>());

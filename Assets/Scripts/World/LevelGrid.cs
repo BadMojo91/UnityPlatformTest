@@ -6,10 +6,12 @@ using System.Collections;
 public class LevelGrid : MonoBehaviour
 {
     //Grid
+    public GameObject[,] chunks;
     public Block[,] blocks;
     public BlockData[] blockData;
     public float TILE_SCALE = 0.32f; //size of grid tiles
-    const int MAX_CHUNK_SIZE = 64; //max size of grid chunk
+    public int MAX_CHUNK_SIZE = 64; //max size of grid chunk
+
 
     //Mesh
     private Mesh mesh;
@@ -91,47 +93,50 @@ public class LevelGrid : MonoBehaviour
     {
 
     }
-    public void UpdateMaterialsList()
+    
+
+    public void CreateChunks(int size)
     {
-        List<Material> materials = new List<Material>();
-        for(int i = 0; i < tex.Length + 1; i++)
+        chunks = new GameObject[size, size];
+        for(int y = 0; y < size; y++)
         {
-            Material mat;
-            if(i == 0)
+            for(int x = 0; x < size; x++)
             {
-                mat = new Material(Shader.Find("Sprites/Diffuse"));
-                mat.color = new Color(0, 0, 0, 0);
-            }
-            else
-            {
-                mat = new Material(Shader.Find("Standard"));
-                mat.mainTexture = tex[i - 1];
-                Debug.Log("Tiles/" + tex[i - 1].name + "_n");
-                Texture2D normalMap = null;
-                normalMap = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Tiles/" + tex[i - 1].name + "_n" + ".png", typeof(Texture2D));
-                if(normalMap)
-                {
-                    mat.SetTexture("_BumpMap", normalMap);
+                Vector2 offset;
+                GameObject newChunk = new GameObject();
+                newChunk.AddComponent<MeshFilter>();
+                newChunk.AddComponent<MeshCollider>();
+                newChunk.AddComponent<MeshRenderer>();
+                newChunk.AddComponent<Chunk>();
+                newChunk.GetComponent<Chunk>().levelGrid = GetComponent<LevelGrid>();
 
-                }
+                offset.x = x * TILE_SCALE * MAX_CHUNK_SIZE;
+                offset.y = y * TILE_SCALE * MAX_CHUNK_SIZE;
+
+                newChunk.transform.position = offset;
+                newChunk.name = "Chunk " + x + ", " + y;
+                newChunk.transform.SetParent(transform);
+                GenerateTerrain(newChunk);
+
+                newChunk.GetComponent<Chunk>().BuildMesh();
+
+                chunks[x, y] = newChunk;
             }
-            materials.Add(mat);
         }
-        meshRend.sharedMaterials = materials.ToArray();
     }
-    public void GenerateTerrain()
-    {
-        DestroyAllTiles();
-        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
 
+    public void GenerateTerrain(GameObject chunk)
+    {
+        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
+        float offsetX, offsetY;
+        offsetX = chunk.transform.position.x;
+        offsetY = chunk.transform.position.y;
         for(int y = 0; y < b.GetLength(1); y++)
         {
             for(int x = 0; x < b.GetLength(0); x++)
             {
                 Block block = new Block();
-                float perlinNoise = Mathf.PerlinNoise(x*scale, y*scale) / magnitude * (seed+1);
-
-                //Debug.Log(perlinNoise);
+                float perlinNoise = Mathf.PerlinNoise((x+offsetX)*scale, (y+offsetY)*scale) / magnitude;
 
                 if(perlinNoise*60 < y)
                     block.subMesh = 0;
@@ -146,9 +151,9 @@ public class LevelGrid : MonoBehaviour
             }
         }
 
-        blocks = b;
-        SaveLevelData();
+        chunk.GetComponent<Chunk>().blocks = b;
     }
+
     public void BuildMesh() //builds mesh based on blocks[,]
     {
         LoadLevelData();
@@ -305,41 +310,45 @@ public class LevelGrid : MonoBehaviour
         BuildMesh();
         UpdateMeshData();
     }
-    public void CreateTileAt(int x, int y, int t)
+    public void CreateTileAt(int x, int y, int t, bool build)
     {
         blocks[x, y].subMesh = t;
         SaveLevelData();
-        BuildMesh();
-        UpdateMeshData();
+        if(build)
+        {
+            BuildMesh();
+            UpdateMeshData();
+        }
     }
     public void CreateLineAt(Vector2 start, Vector2 end, int t)
     {
         float dist = Vector2.Distance(start, end);
-        CreateTileAt((int)start.x, (int)start.y, t);
+        CreateTileAt((int)start.x, (int)start.y, t, false);
         for(int i = 0; i < dist; i++)
         {
             float frac = i / dist;
             Vector2 pos = Vector2.Lerp(start, end, frac);
-            CreateTileAt((int)pos.x, (int)pos.y, t);
+           // Debug.Log((int)pos.x + " " + (int)pos.y);
+            CreateTileAt((int)pos.x, (int)pos.y, t, false);
         }
-        CreateTileAt((int)end.x, (int)end.y, t);
+        CreateTileAt((int)end.x, (int)end.y, t, true);
     }
     public void DestroyAllTiles()
     {
-        Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
-
-        for(int y = 0; y < b.GetLength(1); y++)
+        for(int y = 0; y < MAX_CHUNK_SIZE; y++)
         {
-            for(int x = 0; x < b.GetLength(0); x++)
+            for(int x = 0; x < MAX_CHUNK_SIZE; x++)
             {
-                b[x, y] = new Block();
-                b[x, y].subMesh = 0;
+                foreach(GameObject c in chunks)
+                {
+                    c.GetComponent<Chunk>().blocks[x, y].subMesh = 0;
+                } 
             }
         }
-        blocks = b;
-        SaveLevelData();
-        BuildMesh();
-        UpdateMeshData();
+        foreach(GameObject c in chunks)
+        {
+            c.GetComponent<Chunk>().BuildMesh();
+        }
     }
     public void SaveLevelData()
     {

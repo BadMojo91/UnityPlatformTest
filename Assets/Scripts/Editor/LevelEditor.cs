@@ -53,7 +53,7 @@ public class LevelEditor : Editor {
 
         if (GUILayout.Button("Generate Terrain"))
         {
-            levelGrid.GenerateTerrain();
+           // levelGrid.GenerateTerrain();
             levelGrid.BuildMesh();
             levelGrid.UpdateMeshData();
         }
@@ -63,11 +63,15 @@ public class LevelEditor : Editor {
             levelGrid.UpdateMeshData();
         }
         if(GUILayout.Button("Update Materials")) {
-            levelGrid.UpdateMaterialsList();
+            //levelGrid.UpdateMaterialsList();
         }
 
         if(GUILayout.Button("DestroyTileAt")) {
             levelGrid.DestroyTileAt(w,h);
+        }
+        if(GUILayout.Button("Create Chunks"))
+        {
+            levelGrid.CreateChunks(5);
         }
 
     }
