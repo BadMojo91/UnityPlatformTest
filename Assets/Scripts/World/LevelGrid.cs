@@ -37,9 +37,11 @@ public class LevelGrid : MonoBehaviour
     public Texture2D[] tex;
 
     [Header("Terrain")]
-    public int seed;
+    public int maxHeight;
     public float scale;
     public float magnitude;
+
+    public bool clearGrid;
 
     private void Awake()
     {
@@ -47,10 +49,26 @@ public class LevelGrid : MonoBehaviour
     }
     private void Start()
     {
-        //BuildMesh();
-        //UpdateMeshData();
+        
     }
-
+    private void Update()
+    {
+        
+        if(clearGrid)
+        {
+            List<Transform> chunkList = new List<Transform>();
+            foreach(Transform o in transform)
+            {
+                chunkList.Add(o);
+            }
+            for(int i = 0; i < chunkList.Count; i++)
+            {
+                DestroyImmediate(chunkList[i].gameObject);
+            }
+            clearGrid = false;
+            
+        }
+    }
     //public void ConvertImageToMap(Texture2D image)
     //{
 
@@ -89,16 +107,11 @@ public class LevelGrid : MonoBehaviour
 
     //    CreateGrid(currentMap);
     //}
-    public void LoadMap()
-    {
-
-    }
-    
 
     public void CreateChunks(int size)
     {
-        chunks = new GameObject[size, size];
-        for(int y = 0; y < size; y++)
+        chunks = new GameObject[size, maxHeight];
+        for(int y = 0; y < maxHeight; y++)
         {
             for(int x = 0; x < size; x++)
             {
@@ -124,7 +137,6 @@ public class LevelGrid : MonoBehaviour
             }
         }
     }
-
     public void GenerateTerrain(GameObject chunk)
     {
         Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
@@ -136,7 +148,7 @@ public class LevelGrid : MonoBehaviour
             for(int x = 0; x < b.GetLength(0); x++)
             {
                 Block block = new Block();
-                float perlinNoise = Mathf.PerlinNoise((x+offsetX)*scale, (y+offsetY)*scale) / magnitude;
+                float perlinNoise = Mathf.PerlinNoise((x+offsetX)*scale, y+offsetY*scale) / magnitude;
 
                 if(perlinNoise*60 < y)
                     block.subMesh = 0;
@@ -154,161 +166,13 @@ public class LevelGrid : MonoBehaviour
         chunk.GetComponent<Chunk>().blocks = b;
     }
 
-    public void BuildMesh() //builds mesh based on blocks[,]
-    {
-        LoadLevelData();
-        subMeshes.Clear();
-        for(int i = 0; i < tex.Length + 1; i++) {
-            SubMeshes sm = new SubMeshes();
-            sm.triangles = new List<int>();
-            subMeshes.Add(sm);
-        }
 
-        for(int y = 0; y < MAX_CHUNK_SIZE; y++){
-            for(int x = 0; x < MAX_CHUNK_SIZE; x++){
-
-                if(blocks[x, y].subMesh != 0)
-                    GenerateCollider(x, y); //only generate collider on solid tiles
-
-                CreateVerts(x, y); 
-                CreateTile(blocks[x, y], x, y);
-               
-            }
-        }
-        tileCount = 0;
-    }
-    private void ColTriangles()
-    {
-        colTri.Add(colCount * 4);
-        colTri.Add((colCount * 4) + 1);
-        colTri.Add((colCount * 4) + 3);
-        colTri.Add((colCount * 4) + 1);
-        colTri.Add((colCount * 4) + 2);
-        colTri.Add((colCount * 4) + 3);
-    }
-    private void GenerateCollider(float x, float y)
-    {
-        float i = TILE_SCALE;
-        x = x * TILE_SCALE;
-        y = y * TILE_SCALE;
-
-        //Top
-        colVerts.Add(new Vector3(x, y, i));
-        colVerts.Add(new Vector3(x + i, y, i));
-        colVerts.Add(new Vector3(x + i, y, 0));
-        colVerts.Add(new Vector3(x, y, 0));
-        ColTriangles();
-        colCount++;
-        //Left
-        colVerts.Add(new Vector3(x, y - i, i));
-        colVerts.Add(new Vector3(x, y, i));
-        colVerts.Add(new Vector3(x, y, 0));
-        colVerts.Add(new Vector3(x, y - i, 0));
-        ColTriangles();
-        colCount++;
-        //Right
-        colVerts.Add(new Vector3(x + i, y, i));
-        colVerts.Add(new Vector3(x + i, y - i, i));
-        colVerts.Add(new Vector3(x + i, y - i, 0));
-        colVerts.Add(new Vector3(x + i, y, 0));
-        ColTriangles();
-        colCount++;
-        //Bottom
-        colVerts.Add(new Vector3(x + i, y - i, i));
-        colVerts.Add(new Vector3(x, y - i, i));
-        colVerts.Add(new Vector3(x, y - i, 0));
-        colVerts.Add(new Vector3(x + i, y - i, 0));
-        ColTriangles();
-        colCount++;
-    }
-    public void UpdateMeshData()
-    {
-        SaveLevelData();
-        mesh = new Mesh();
-        mesh.Clear();
-
-        mesh.vertices = verts.ToArray();
-
-        mesh.subMeshCount = tex.Length + 1;
-        for(int i = 0; i < subMeshes.Count; i++)
-        {
-            mesh.SetTriangles(subMeshes[i].triangles, i);
-
-        }
-
-        for(int i = 0; i < mesh.subMeshCount; i++)
-        {
-            if(mesh.GetTriangles(i).Length < 3)
-            {
-                mesh.SetTriangles(new int[3] { 0, 0, 0 }, i);
-            }
-        }
-
-        mesh.uv = uvs.ToArray();
-        mesh.RecalculateNormals();
-        meshFilter.sharedMesh = mesh;
-
-        Mesh colMesh = new Mesh();
-        colMesh.name = "Collider Mesh";
-        colMesh.vertices = colVerts.ToArray();
-        colMesh.triangles = colTri.ToArray();
-        col.sharedMesh = colMesh;
-
-        //Cleanup
-        colVerts.Clear();
-        colTri.Clear();
-        colCount = 0;
-        verts.Clear();
-        tri.Clear();
-        uvs.Clear();
-
-    }
-    private void CreateVerts(float x, float y)
-    {
-        float i = TILE_SCALE;
-        x = x * TILE_SCALE;
-        y = y * TILE_SCALE;
-        verts.Add(new Vector2(x, y));
-        verts.Add(new Vector2(x + i, y));
-        verts.Add(new Vector2(x + i, y - i));
-        verts.Add(new Vector2(x, y - i));
-
-        uvs.Add(new Vector2(0, 1));
-        uvs.Add(new Vector2(1, 1));
-        uvs.Add(new Vector2(1, 0));
-        uvs.Add(new Vector2(0, 0));
-
-    }
-    private void CreateTile(Block block, float x, float y)
-    {
-
-        List<int> t = new List<int>();
-
-        t.Add(tileCount * 4);
-        t.Add((tileCount * 4) + 1);
-        t.Add((tileCount * 4) + 3);
-        t.Add((tileCount * 4) + 1);
-        t.Add((tileCount * 4) + 2);
-        t.Add((tileCount * 4) + 3);
-
-
-        block.triangles = t.ToArray();
-
-        for(int i = 0; i < 6; i++)
-        {
-            //Debug.Log(block.subMesh);
-            subMeshes[block.subMesh].triangles.Add(t[i]);
-        }
-
-        tileCount++;
-    }
+   
     public void DestroyTileAt(int x, int y)
     {
         //Debug.Log(blocks.GetLength(0) + " " + blocks.GetLength(1));
         blocks[x, y].subMesh = 0;
         SaveLevelData();
-        BuildMesh();
-        UpdateMeshData();
     }
     public void CreateTileAt(int x, int y, int t, bool build)
     {
@@ -316,8 +180,8 @@ public class LevelGrid : MonoBehaviour
         SaveLevelData();
         if(build)
         {
-            BuildMesh();
-            UpdateMeshData();
+           // BuildMesh();
+           // UpdateMeshData();
         }
     }
     public void CreateLineAt(Vector2 start, Vector2 end, int t)

@@ -45,8 +45,8 @@ public class LevelEditor : Editor {
         if(GUILayout.Button("Draw Line"))
         {
             levelGrid.CreateLineAt(new Vector2(x, y), new Vector2(x2, y2), 2);
-            levelGrid.BuildMesh();
-            levelGrid.UpdateMeshData();
+           // levelGrid.BuildMesh();
+           // levelGrid.UpdateMeshData();
             lineX = x2.ToString();
             lineY = y2.ToString();
         }
@@ -54,13 +54,13 @@ public class LevelEditor : Editor {
         if (GUILayout.Button("Generate Terrain"))
         {
            // levelGrid.GenerateTerrain();
-            levelGrid.BuildMesh();
-            levelGrid.UpdateMeshData();
+           // levelGrid.BuildMesh();
+           // levelGrid.UpdateMeshData();
         }
 
         if (GUILayout.Button("Build Mesh")) {
-            levelGrid.BuildMesh();
-            levelGrid.UpdateMeshData();
+          //  levelGrid.BuildMesh();
+           // levelGrid.UpdateMeshData();
         }
         if(GUILayout.Button("Update Materials")) {
             //levelGrid.UpdateMaterialsList();
