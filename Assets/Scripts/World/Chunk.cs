@@ -38,7 +38,7 @@ public class Chunk : MonoBehaviour
             {
                 mat = new Material(Shader.Find("Standard"));
                 mat.mainTexture = levelGrid.tex[i - 1];
-                Debug.Log("Tiles/" + levelGrid.tex[i - 1].name + "_n");
+                //Debug.Log("Tiles/" + levelGrid.tex[i - 1].name + "_n");
                 Texture2D normalMap = null;
                 normalMap = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Tiles/" + levelGrid.tex[i - 1].name + "_n" + ".png", typeof(Texture2D));
                 if(normalMap)

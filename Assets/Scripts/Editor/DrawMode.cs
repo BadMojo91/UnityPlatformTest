@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 public class DrawMode : EditorWindow {
 
-    GameObject levelGrid;
+    LevelGrid levelGrid;
 
     [MenuItem("Window/DrawMode")]
     static void Init() {
@@ -14,12 +15,21 @@ public class DrawMode : EditorWindow {
     }
 
     private void OnEnable() {
-        levelGrid = GameObject.Find("LevelGrid");
+        levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
     }
 
 
     void OnGUI() {
-       
+
+        if(GUILayout.Button("Load Chunks"))
+        {
+            levelGrid.CreateChunks(5);
+        }
+
+        if(GUILayout.Button("ClearGrid")){
+            levelGrid.GUIClear();
+        }
+
 
     }
 

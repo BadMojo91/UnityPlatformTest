@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿/*
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -19,10 +20,7 @@ public class LevelEditor : Editor {
         LevelGrid levelGrid = (LevelGrid)target;
 
 
-        GUILayout.BeginHorizontal();
-        width = GUILayout.TextField(width);
-        height = GUILayout.TextField(height);
-        GUILayout.EndHorizontal();
+       
         GUILayout.BeginHorizontal();
         lineX = GUILayout.TextField(lineX);
         lineY = GUILayout.TextField(lineY);
@@ -37,10 +35,11 @@ public class LevelEditor : Editor {
         int.TryParse(lineX2, out x2);
         int.TryParse(lineY2, out y2);
 
-        if(GUILayout.Button("(CAUTION!)Clear Grid"))
+        if(GUILayout.Button("Create Chunks"))
         {
-            levelGrid.DestroyAllTiles();
+            levelGrid.CreateChunks(5);
         }
+
 
         if(GUILayout.Button("Draw Line"))
         {
@@ -51,28 +50,15 @@ public class LevelEditor : Editor {
             lineY = y2.ToString();
         }
 
-        if (GUILayout.Button("Generate Terrain"))
-        {
-           // levelGrid.GenerateTerrain();
-           // levelGrid.BuildMesh();
-           // levelGrid.UpdateMeshData();
-        }
-
-        if (GUILayout.Button("Build Mesh")) {
-          //  levelGrid.BuildMesh();
-           // levelGrid.UpdateMeshData();
-        }
-        if(GUILayout.Button("Update Materials")) {
-            //levelGrid.UpdateMaterialsList();
-        }
-
+        GUILayout.BeginHorizontal();
+        width = GUILayout.TextField(width);
+        height = GUILayout.TextField(height);
+       
         if(GUILayout.Button("DestroyTileAt")) {
-            levelGrid.DestroyTileAt(w,h);
+            levelGrid.DestroyTileAt(levelGrid.chunks[0,0].GetComponent<Chunk>(),w,h);
         }
-        if(GUILayout.Button("Create Chunks"))
-        {
-            levelGrid.CreateChunks(5);
-        }
-
+        GUILayout.EndHorizontal();
+        
     }
 }
+*/

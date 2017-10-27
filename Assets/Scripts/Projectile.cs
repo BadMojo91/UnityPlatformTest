@@ -46,7 +46,7 @@ public class Projectile : MonoBehaviour {
         Vector2 pos = transform.position;
         pos += (new Vector2(pos.normalized.x, pos.normalized.y)) * -0.5f;
         
-        levelGrid.DestroyTileAt(Mathf.RoundToInt(pos.x-.5f), Mathf.RoundToInt(pos.y+.5f));
+       // levelGrid.DestroyTileAt(Mathf.RoundToInt(pos.x-.5f), Mathf.RoundToInt(pos.y+.5f));
 
         destroyBool = true;
         //}

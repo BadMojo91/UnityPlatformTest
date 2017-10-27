@@ -25,6 +25,7 @@ public class Player : MonoBehaviour {
     LevelGrid levelGrid;
 
     public Vector2 currentBlock;
+    public int currentChunk;
 
     private void Awake() {
         levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
@@ -35,7 +36,7 @@ public class Player : MonoBehaviour {
 
         if(Input.GetButtonDown("Fire1"))
             if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
-                levelGrid.DestroyTileAt((int)currentBlock.x, (int)currentBlock.y);
+              levelGrid.DestroyTileAt(levelGrid.chunks[currentChunk,0].GetComponent<Chunk>(),(int)currentBlock.x, (int)currentBlock.y);
 
         if(Input.GetButton("Fire2"))
         {
@@ -65,7 +66,15 @@ public class Player : MonoBehaviour {
         {
             Vector2 point = new Vector2(hit.point.x, hit.point.y) / levelGrid.TILE_SCALE;
             point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
-            currentBlock = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
+            point = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
+            int i = 0;
+            while(point.x > levelGrid.MAX_CHUNK_SIZE)
+            {
+                point.x -= levelGrid.MAX_CHUNK_SIZE;
+                i++;
+            }
+            currentBlock = point;
+            currentChunk = i;
             return true;
         }
         else

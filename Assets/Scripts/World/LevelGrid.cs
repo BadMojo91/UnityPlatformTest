@@ -38,11 +38,14 @@ public class LevelGrid : MonoBehaviour
 
     [Header("Terrain")]
     public int maxHeight;
+    public int seed;
     public float scale;
     public float magnitude;
 
     public bool clearGrid;
-
+    public void GUIClear() {
+        clearGrid = true;
+    }
     private void Awake()
     {
         LoadLevelData();
@@ -56,15 +59,7 @@ public class LevelGrid : MonoBehaviour
         
         if(clearGrid)
         {
-            List<Transform> chunkList = new List<Transform>();
-            foreach(Transform o in transform)
-            {
-                chunkList.Add(o);
-            }
-            for(int i = 0; i < chunkList.Count; i++)
-            {
-                DestroyImmediate(chunkList[i].gameObject);
-            }
+            StartCoroutine(ClearGrid());
             clearGrid = false;
             
         }
@@ -107,9 +102,23 @@ public class LevelGrid : MonoBehaviour
 
     //    CreateGrid(currentMap);
     //}
-
+    public IEnumerator ClearGrid()
+    {
+        List<Transform> chunkList = new List<Transform>();
+        foreach(Transform o in transform)
+        {
+            chunkList.Add(o);
+            
+        }
+        for(int i = 0; i < chunkList.Count; i++)
+        {     
+           DestroyImmediate(chunkList[i].gameObject);
+        }
+        yield return new WaitForEndOfFrame();
+    }
     public void CreateChunks(int size)
     {
+        StartCoroutine(ClearGrid());
         chunks = new GameObject[size, maxHeight];
         for(int y = 0; y < maxHeight; y++)
         {
@@ -139,6 +148,7 @@ public class LevelGrid : MonoBehaviour
     }
     public void GenerateTerrain(GameObject chunk)
     {
+ 
         Block[,] b = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
         float offsetX, offsetY;
         offsetX = chunk.transform.position.x;
@@ -148,7 +158,7 @@ public class LevelGrid : MonoBehaviour
             for(int x = 0; x < b.GetLength(0); x++)
             {
                 Block block = new Block();
-                float perlinNoise = Mathf.PerlinNoise((x+offsetX)*scale, y+offsetY*scale) / magnitude;
+                float perlinNoise = Mathf.PerlinNoise(seed+x*scale, -seed+y*scale) / magnitude * scale;
 
                 if(perlinNoise*60 < y)
                     block.subMesh = 0;
@@ -165,14 +175,11 @@ public class LevelGrid : MonoBehaviour
 
         chunk.GetComponent<Chunk>().blocks = b;
     }
-
-
-   
-    public void DestroyTileAt(int x, int y)
+    public void DestroyTileAt(Chunk c, int x, int y)
     {
         //Debug.Log(blocks.GetLength(0) + " " + blocks.GetLength(1));
-        blocks[x, y].subMesh = 0;
-        SaveLevelData();
+        c.blocks[x, y].subMesh = 0;
+        c.BuildMesh();
     }
     public void CreateTileAt(int x, int y, int t, bool build)
     {
