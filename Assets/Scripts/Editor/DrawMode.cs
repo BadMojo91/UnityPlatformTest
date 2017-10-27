@@ -20,7 +20,12 @@ public class DrawMode : EditorWindow {
 
 
     void OnGUI() {
-
+        if(GUILayout.Button("Save Chunk Data")) {
+            levelGrid.SaveLevelData();
+        }
+        if(GUILayout.Button("Load Chunk Data")) {
+            levelGrid.LoadLevelData();
+        }
         if(GUILayout.Button("Load Chunks"))
         {
             levelGrid.CreateChunks(5);

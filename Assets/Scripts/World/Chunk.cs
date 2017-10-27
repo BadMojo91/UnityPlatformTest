@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class Chunk : MonoBehaviour
-{
+public class Chunk : MonoBehaviour {
     public LevelGrid levelGrid;
     //Mesh
     Mesh mesh;
@@ -21,28 +20,25 @@ public class Chunk : MonoBehaviour
     List<Vector3> colVerts = new List<Vector3>();
     List<int> colTri = new List<int>();
 
-
     public Block[,] blocks;
-    public void UpdateMaterialsList()
-    {
+    public void UpdateMaterialsList() {
+        if(levelGrid == null)
+            return;
+
         List<Material> materials = new List<Material>();
-        for(int i = 0; i < levelGrid.tex.Length + 1; i++)
-        {
+        for(int i = 0; i < levelGrid.tex.Length + 1; i++) {
             Material mat;
-            if(i == 0)
-            {
+            if(i == 0) {
                 mat = new Material(Shader.Find("Sprites/Diffuse"));
                 mat.color = new Color(0, 0, 0, 0);
             }
-            else
-            {
+            else {
                 mat = new Material(Shader.Find("Standard"));
                 mat.mainTexture = levelGrid.tex[i - 1];
                 //Debug.Log("Tiles/" + levelGrid.tex[i - 1].name + "_n");
                 Texture2D normalMap = null;
                 normalMap = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Tiles/" + levelGrid.tex[i - 1].name + "_n" + ".png", typeof(Texture2D));
-                if(normalMap)
-                {
+                if(normalMap) {
                     mat.SetTexture("_BumpMap", normalMap);
 
                 }
@@ -52,8 +48,9 @@ public class Chunk : MonoBehaviour
         meshRend = GetComponent<MeshRenderer>();
         meshRend.sharedMaterials = materials.ToArray();
     }
-    private void CreateVerts(float x, float y)
-    {
+    private void CreateVerts(float x, float y) {
+        if(levelGrid == null)
+            return;
         float i = levelGrid.TILE_SCALE;
         x = x * levelGrid.TILE_SCALE;
         y = y * levelGrid.TILE_SCALE;
@@ -68,8 +65,7 @@ public class Chunk : MonoBehaviour
         uvs.Add(new Vector2(0, 0));
 
     }
-    private void CreateTile(Block block, float x, float y)
-    {
+    private void CreateTile(Block block, float x, float y) {
 
         List<int> t = new List<int>();
 
@@ -83,16 +79,14 @@ public class Chunk : MonoBehaviour
 
         block.triangles = t.ToArray();
 
-        for(int i = 0; i < 6; i++)
-        {
+        for(int i = 0; i < 6; i++) {
             //Debug.Log(block.subMesh);
             subMeshes[block.subMesh].triangles.Add(t[i]);
         }
 
         tileCount++;
     }
-    private void ColTriangles()
-    {
+    private void ColTriangles() {
         colTri.Add(colCount * 4);
         colTri.Add((colCount * 4) + 1);
         colTri.Add((colCount * 4) + 3);
@@ -100,8 +94,9 @@ public class Chunk : MonoBehaviour
         colTri.Add((colCount * 4) + 2);
         colTri.Add((colCount * 4) + 3);
     }
-    private void GenerateCollider(float x, float y)
-    {
+    private void GenerateCollider(float x, float y) {
+        if(levelGrid == null)
+            return;
         float i = levelGrid.TILE_SCALE;
         x = x * levelGrid.TILE_SCALE;
         y = y * levelGrid.TILE_SCALE;
@@ -135,8 +130,9 @@ public class Chunk : MonoBehaviour
         ColTriangles();
         colCount++;
     }
-    private void UpdateMeshData()
-    {
+    private void UpdateMeshData() {
+        if(levelGrid == null)
+            return;
         meshFilter = GetComponent<MeshFilter>();
         meshRend = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<MeshCollider>();
@@ -147,15 +143,12 @@ public class Chunk : MonoBehaviour
         mesh.vertices = verts.ToArray();
 
         mesh.subMeshCount = levelGrid.tex.Length + 1;
-        for(int i = 0; i < subMeshes.Count; i++)
-        {
+        for(int i = 0; i < subMeshes.Count; i++) {
             mesh.SetTriangles(subMeshes[i].triangles, i);
         }
 
-        for(int i = 0; i < mesh.subMeshCount; i++)
-        {
-            if(mesh.GetTriangles(i).Length < 3)
-            {
+        for(int i = 0; i < mesh.subMeshCount; i++) {
+            if(mesh.GetTriangles(i).Length < 3) {
                 mesh.SetTriangles(new int[3] { 0, 0, 0 }, i);
             }
         }
@@ -179,22 +172,20 @@ public class Chunk : MonoBehaviour
         uvs.Clear();
 
     }
-    public void BuildMesh()
-    {
+    public void BuildMesh() {
+        if(levelGrid == null)
+            return;
         UpdateMaterialsList();
         //gather submeshes
         subMeshes.Clear();
-        for(int i = 0; i < levelGrid.tex.Length + 1; i++)
-        {
+        for(int i = 0; i < levelGrid.tex.Length + 1; i++) {
             SubMeshes sm = new SubMeshes();
             sm.triangles = new List<int>();
             subMeshes.Add(sm);
         }
 
-        for(int y = 0; y < levelGrid.MAX_CHUNK_SIZE; y++)
-        {
-            for(int x = 0; x < levelGrid.MAX_CHUNK_SIZE; x++)
-            {
+        for(int y = 0; y < levelGrid.MAX_CHUNK_SIZE; y++) {
+            for(int x = 0; x < levelGrid.MAX_CHUNK_SIZE; x++) {
 
                 if(blocks[x, y].subMesh != 0)
                     GenerateCollider(x, y); //only generate collider on solid tiles
