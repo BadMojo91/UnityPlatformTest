@@ -6,10 +6,10 @@ using System.Collections;
 public class LevelGrid : MonoBehaviour {
 
     //LevelData
-    LevelData currentLevelData;
+    public LevelData currentLevelData;
 
     //Grid
-   [SerializeField] public GameObject[,] chunks;
+    public GameObject[,] chunks;
     public Block[,] blocks;
     public ChunkData cData;
     public float TILE_SCALE = 0.32f; //size of grid tiles
@@ -46,10 +46,10 @@ public class LevelGrid : MonoBehaviour {
         clearGrid = true;
     }
     private void Awake() {
-       // LoadLevelData();
+        LoadLevelData();
     }
     private void Start() {
-
+        CreateChunks(5);
     }
     private void Update() {
 
@@ -102,7 +102,7 @@ public class LevelGrid : MonoBehaviour {
     //}
     public IEnumerator ClearGrid() {
         List<Transform> chunkList = new List<Transform>();
-
+        
         foreach(Transform o in transform) {
             chunkList.Add(o);
         }
@@ -115,7 +115,13 @@ public class LevelGrid : MonoBehaviour {
     }
 
     public void CreateChunks(int size) {
+        if(!EditorApplication.isPlaying)
         StartCoroutine(ClearGrid());
+        else
+        foreach(Transform o in transform) {
+            Destroy(o.gameObject);
+        }
+
         chunks = new GameObject[size, maxHeight];
         for(int y = 0; y < maxHeight; y++) {
             for(int x = 0; x < size; x++) {
@@ -125,6 +131,7 @@ public class LevelGrid : MonoBehaviour {
                 newChunk.AddComponent<MeshCollider>();
                 newChunk.AddComponent<MeshRenderer>();
                 newChunk.AddComponent<Chunk>();
+               
                 newChunk.GetComponent<Chunk>().levelGrid = GetComponent<LevelGrid>();
 
                 offset.x = x * TILE_SCALE * MAX_CHUNK_SIZE;
@@ -147,7 +154,7 @@ public class LevelGrid : MonoBehaviour {
         for(int y = 0; y < chunks.GetLength(1); y++) {
             for(int x = 0; x < chunks.GetLength(0); x++) {
                 Chunk chunk = chunks[x, y].GetComponent<Chunk>();
-                GenerateTerrain(chunks[x,y]);
+               // GenerateTerrain(chunks[x,y]);
                 chunk.BuildMesh();
             }
         }
@@ -268,10 +275,9 @@ public class LevelGrid : MonoBehaviour {
                 }
             }
         }
-
+        UpdateChunks();
         
-
-
+      
         
        
 
@@ -310,7 +316,7 @@ public class ChunkData {
     public int x, y;
     public BlockData[] blockData;
 }
-
+[System.Serializable]
 public class LevelData {
     public int width;
     public int height;

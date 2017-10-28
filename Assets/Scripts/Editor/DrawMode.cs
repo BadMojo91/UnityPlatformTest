@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class DrawMode : EditorWindow {
 
-    LevelGrid levelGrid;
+    public LevelGrid levelGrid;
 
     [MenuItem("Window/DrawMode")]
     static void Init() {
@@ -28,6 +28,7 @@ public class DrawMode : EditorWindow {
         }
         if(GUILayout.Button("Load Chunks"))
         {
+            levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
             levelGrid.CreateChunks(5);
         }
 
