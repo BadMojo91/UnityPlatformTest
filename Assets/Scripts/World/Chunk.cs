@@ -16,7 +16,7 @@ public class Chunk : MonoBehaviour {
     List<Vector2> uvs = new List<Vector2>();
     int colCount; //collider index for triangles
     int tileCount;//mesh index for triangles
-    float uvUnit = 1;
+    float uvUnit = 0.5f;
     //Collider
     List<Vector3> colVerts = new List<Vector3>();
     List<int> colTri = new List<int>();
@@ -59,17 +59,17 @@ public class Chunk : MonoBehaviour {
         verts.Add(new Vector2(x + i, y));
         verts.Add(new Vector2(x + i, y - i));
         verts.Add(new Vector2(x, y - i));
-       
-        
-        uvs.Add(new Vector2(0, 1));
-        uvs.Add(new Vector2(1, 1));
-        uvs.Add(new Vector2(1, 0));
-        uvs.Add(new Vector2(0, 0));
-        
-        //uvs.Add(new Vector2(uvUnit * uvIndexX,          uvUnit * uvIndexY + uvUnit));
-        //uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY + uvUnit));
-        //uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY));
-        //uvs.Add(new Vector2(uvUnit * uvIndexX,          uvUnit * uvIndexY));
+
+
+        //uvs.Add(new Vector2(0, 1));
+        //uvs.Add(new Vector2(1, 1));
+        //uvs.Add(new Vector2(1, 0));
+        //uvs.Add(new Vector2(0, 0));
+
+        uvs.Add(new Vector2(uvUnit * uvIndexX, uvUnit * uvIndexY + uvUnit));
+        uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY + uvUnit));
+        uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY));
+        uvs.Add(new Vector2(uvUnit * uvIndexX, uvUnit * uvIndexY));
 
     }
     private void CreateTile(Block block, float x, float y) {
@@ -191,7 +191,7 @@ public class Chunk : MonoBehaviour {
             subMeshes.Add(sm);
         }
         int uvIndexX = 0;
-        int uvIndexY = 2;
+        int uvIndexY = 1;
         for(int y = 0; y < levelGrid.MAX_CHUNK_SIZE; y++) {
             for(int x = 0; x < levelGrid.MAX_CHUNK_SIZE; x++) {
 
@@ -202,12 +202,12 @@ public class Chunk : MonoBehaviour {
                 CreateTile(blocks[x, y], x, y);
                 
                 uvIndexX++;
-                if(uvIndexX > 3)
+                if(uvIndexX > 1)
                     uvIndexX = 0;
             }
             uvIndexY--;
             if(uvIndexY < 0)
-                uvIndexY = 3;
+                uvIndexY = 1;
         }
         tileCount = 0;
 
