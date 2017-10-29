@@ -54,7 +54,7 @@ namespace protagonist {
             if(Input.GetButton("Jump") && canJump)
                 rb.AddForce(player.TransformDirection(Vector2.up * jumpMultiplier) * jumpSpeed);
 
-            if(Physics.Raycast(player.position, Vector3.down, reachToFloor)) {
+            if(Physics.Raycast(player.position, Vector3.down + (Vector3.left * 0.25f), reachToFloor) || Physics.Raycast(player.position, Vector3.down + (Vector3.right * 0.25f), reachToFloor)) {
                 canJump = true;
             }
             else {

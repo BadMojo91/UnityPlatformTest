@@ -16,6 +16,7 @@ public class Chunk : MonoBehaviour {
     List<Vector2> uvs = new List<Vector2>();
     int colCount; //collider index for triangles
     int tileCount;//mesh index for triangles
+    float uvUnit = 1;
     //Collider
     List<Vector3> colVerts = new List<Vector3>();
     List<int> colTri = new List<int>();
@@ -48,7 +49,7 @@ public class Chunk : MonoBehaviour {
         meshRend = GetComponent<MeshRenderer>();
         meshRend.sharedMaterials = materials.ToArray();
     }
-    private void CreateVerts(float x, float y) {
+    private void CreateVerts(float x, float y, int uvIndexX, int uvIndexY) {
         if(levelGrid == null)
             return;
         float i = levelGrid.TILE_SCALE;
@@ -58,11 +59,17 @@ public class Chunk : MonoBehaviour {
         verts.Add(new Vector2(x + i, y));
         verts.Add(new Vector2(x + i, y - i));
         verts.Add(new Vector2(x, y - i));
-
+       
+        
         uvs.Add(new Vector2(0, 1));
         uvs.Add(new Vector2(1, 1));
         uvs.Add(new Vector2(1, 0));
         uvs.Add(new Vector2(0, 0));
+        
+        //uvs.Add(new Vector2(uvUnit * uvIndexX,          uvUnit * uvIndexY + uvUnit));
+        //uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY + uvUnit));
+        //uvs.Add(new Vector2(uvUnit * uvIndexX + uvUnit, uvUnit * uvIndexY));
+        //uvs.Add(new Vector2(uvUnit * uvIndexX,          uvUnit * uvIndexY));
 
     }
     private void CreateTile(Block block, float x, float y) {
@@ -183,17 +190,24 @@ public class Chunk : MonoBehaviour {
             sm.triangles = new List<int>();
             subMeshes.Add(sm);
         }
-
+        int uvIndexX = 0;
+        int uvIndexY = 2;
         for(int y = 0; y < levelGrid.MAX_CHUNK_SIZE; y++) {
             for(int x = 0; x < levelGrid.MAX_CHUNK_SIZE; x++) {
 
                 if(blocks[x, y].subMesh != 0)
                     GenerateCollider(x, y); //only generate collider on solid tiles
 
-                CreateVerts(x, y);
+                CreateVerts(x, y, uvIndexX, uvIndexY);
                 CreateTile(blocks[x, y], x, y);
-
+                
+                uvIndexX++;
+                if(uvIndexX > 3)
+                    uvIndexX = 0;
             }
+            uvIndexY--;
+            if(uvIndexY < 0)
+                uvIndexY = 3;
         }
         tileCount = 0;
 

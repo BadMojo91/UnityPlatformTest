@@ -12,7 +12,7 @@ public class LevelGrid : MonoBehaviour {
     public GameObject[,] chunks;
     public Block[,] blocks;
     public ChunkData cData;
-    public float TILE_SCALE = 0.32f; //size of grid tiles
+    public float TILE_SCALE = 0.16f; //size of grid tiles
     public int MAX_CHUNK_SIZE = 64; //max size of grid chunk
 
 
@@ -188,8 +188,13 @@ public class LevelGrid : MonoBehaviour {
     }
     public void DestroyTileAt(Chunk c, int x, int y) {
         //Debug.Log(blocks.GetLength(0) + " " + blocks.GetLength(1));
-        c.blocks[x, y].subMesh = 0;
-        c.BuildMesh();
+        try {
+            c.blocks[x, y].subMesh = 0;
+            c.BuildMesh();
+        }
+        catch {
+            Debug.LogError("DestroyTileAt is out of range: " + c + " " + x + " " + y);
+        }
     }
     public void CreateTileAt(int x, int y, int t, bool build) {
         blocks[x, y].subMesh = t;

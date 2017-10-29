@@ -68,12 +68,12 @@ public class Player : MonoBehaviour {
             point = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
             int i = 0;
             int y = 0;
-            while(point.x > levelGrid.MAX_CHUNK_SIZE)
+            while(point.x >= levelGrid.MAX_CHUNK_SIZE)
             {
                 point.x -= levelGrid.MAX_CHUNK_SIZE;
                 i++;
             }
-            while(point.y > levelGrid.MAX_CHUNK_SIZE) {
+            while(point.y >= levelGrid.MAX_CHUNK_SIZE) {
                 point.y -= levelGrid.MAX_CHUNK_SIZE;
                 y++;
             }
