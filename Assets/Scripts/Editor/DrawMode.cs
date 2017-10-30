@@ -20,13 +20,16 @@ public class DrawMode : EditorWindow {
 
 
     void OnGUI() {
+        if(GUILayout.Button("Update Chunks")) {
+            levelGrid.UpdateChunks();
+        }
         if(GUILayout.Button("Save Chunk Data")) {
             levelGrid.SaveLevelData();
         }
         if(GUILayout.Button("Load Chunk Data")) {
             levelGrid.LoadLevelData();
         }
-        if(GUILayout.Button("Load Chunks"))
+        if(GUILayout.Button("Generate Terrain"))
         {
             levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
             levelGrid.CreateChunks(5);

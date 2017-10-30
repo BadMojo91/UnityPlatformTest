@@ -6,24 +6,23 @@ using System.Collections;
 public class LevelGrid : MonoBehaviour {
 
     //LevelData
-    public LevelData currentLevelData;
+    public ChunkSerialize chunkSerializer;
 
     //Grid
     public GameObject[,] chunks;
     public Block[,] blocks;
-    public ChunkData cData;
     public float TILE_SCALE = 0.16f; //size of grid tiles
     public int MAX_CHUNK_SIZE = 64; //max size of grid chunk
 
 
-    //Mesh
-    List<SubMeshes> subMeshes = new List<SubMeshes>();
-    List<Vector3> verts = new List<Vector3>();
-    List<int> tri = new List<int>();
-    List<Vector2> uvs = new List<Vector2>();
+    ////Mesh
+    //List<SubMeshes> subMeshes = new List<SubMeshes>();
+    //List<Vector3> verts = new List<Vector3>();
+    //List<int> tri = new List<int>();
+    //List<Vector2> uvs = new List<Vector2>();
     //Collider
-    List<Vector3> colVerts = new List<Vector3>();
-    List<int> colTri = new List<int>();
+    //List<Vector3> colVerts = new List<Vector3>();
+    //List<int> colTri = new List<int>();
 
     //Textures
 
@@ -46,7 +45,7 @@ public class LevelGrid : MonoBehaviour {
         clearGrid = true;
     }
     private void Awake() {
-        LoadLevelData();
+        //LoadLevelData();
     }
     private void Start() {
         CreateChunks(5);
@@ -59,9 +58,9 @@ public class LevelGrid : MonoBehaviour {
 
         }
     }
-    private void OnValidate() {
+    //private void OnValidate() {
         //UpdateChunks();
-    }
+    //}
     //public void ConvertImageToMap(Texture2D image)
     //{
 
@@ -158,7 +157,7 @@ public class LevelGrid : MonoBehaviour {
                 chunk.BuildMesh();
             }
         }
-        SaveLevelData();
+        //SaveLevelData();
     }
     public void GenerateTerrain(GameObject chunk) {
 
@@ -196,14 +195,16 @@ public class LevelGrid : MonoBehaviour {
             Debug.LogError("DestroyTileAt is out of range: " + c + " " + x + " " + y);
         }
     }
-    public void CreateTileAt(int x, int y, int t, bool build) {
-        blocks[x, y].subMesh = t;
-        SaveLevelData();
-        if(build) {
-            // BuildMesh();
-            // UpdateMeshData();
+    public void CreateTileAt(Chunk c, int x, int y, int t) {
+        try {
+            c.blocks[x, y].subMesh = t;
+            c.BuildMesh();
+        }
+        catch {
+            Debug.LogError("CreateTileAt is out of range: " + c + " " + x + " " + y);
         }
     }
+    /*
     public void CreateLineAt(Vector2 start, Vector2 end, int t) {
         float dist = Vector2.Distance(start, end);
         CreateTileAt((int)start.x, (int)start.y, t, false);
@@ -215,6 +216,7 @@ public class LevelGrid : MonoBehaviour {
         }
         CreateTileAt((int)end.x, (int)end.y, t, true);
     }
+    */
     public void DestroyAllTiles() {
         for(int y = 0; y < MAX_CHUNK_SIZE; y++) {
             for(int x = 0; x < MAX_CHUNK_SIZE; x++) {
@@ -246,47 +248,50 @@ public class LevelGrid : MonoBehaviour {
                 chunkData.Add(cd);
             }
         }
-       
+        Debug.Log(chunkData);
         LevelData ld = new LevelData(chunks.GetLength(0), chunks.GetLength(1), chunkData.ToArray());
+        Debug.Log(ld);
+        chunkSerializer.SaveChunks(ld);
     }
     public void LoadLevelData() {
-        if(currentLevelData == null)
-            return;
+        LevelData levelData = chunkSerializer.LoadChunk();
 
-        int w = currentLevelData.width;
-        int h = currentLevelData.height;
- 
-        foreach(ChunkData chDat in currentLevelData.chunkData) {
-            for(int y = 0; y < h; y++) {
-                for(int x = 0; x < w; x++) {
-                    if(chDat.x == x && chDat.y == y) {
-                        Chunk newChunk = new Chunk();
-                        Block[,] newBlocks = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
-                        foreach(BlockData block in chDat.blockData) {
-                            for(int y2 = 0; y2 < MAX_CHUNK_SIZE; y2++) {
-                                for(int x2 = 0; x2 < MAX_CHUNK_SIZE; x2++) {
-                                    if(x2 == block.x && y2 == block.y) {
-                                        Block newBlock = new Block();
-                                        newBlock.subMesh = block.subMesh;
-                                        newBlocks[x2, y2] = newBlock;
+        if(levelData == null)
+            return;
+        else {
+            Debug.Log(levelData.height + " " + levelData.width + " " + levelData.chunkData.Length);
+            int w = levelData.width;
+            int h = levelData.height;
+            chunks = new GameObject[w, h];
+            foreach(ChunkData chDat in levelData.chunkData) {
+                for(int y = 0; y < h; y++) {
+                    for(int x = 0; x < w; x++) {
+                        if(chDat.x == x && chDat.y == y) {
+                            chunks[x, y] = new GameObject();
+                            Block[,] newBlocks = new Block[MAX_CHUNK_SIZE, MAX_CHUNK_SIZE];
+                            foreach(BlockData block in chDat.blockData) {
+                                for(int y2 = 0; y2 < MAX_CHUNK_SIZE; y2++) {
+                                    for(int x2 = 0; x2 < MAX_CHUNK_SIZE; x2++) {
+                                        if(x2 == block.x && y2 == block.y) {
+                                            Block newBlock = new Block();
+                                            newBlock.subMesh = block.subMesh;
+                                            newBlocks[x2, y2] = newBlock;
+                                        }
                                     }
                                 }
-                            }                           
+                            }
+                            chunks[x, y].GetComponent<Chunk>().blocks = newBlocks;
+
+
                         }
-                        chunks[x, y].GetComponent<Chunk>().blocks = newBlocks;
-                        
-                      
-                    }                 
+                    }
                 }
             }
+            UpdateChunks();
         }
-        UpdateChunks();
-        
-      
-        
-       
-
     }
+
+        
 }
 [System.Serializable]
 public class SubMeshes {
