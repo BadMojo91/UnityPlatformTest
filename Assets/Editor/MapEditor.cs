@@ -17,8 +17,8 @@ public class MapEditor : EditorWindow {
             mapInfo.GetComponent<MapInfo>().UpdateMaterials();
         }
         if(GUILayout.Button("Generate Chunks")) {
-            for(int x = -5; x < 5; x++) {
-                for(int y = -5; y < 5; y++) {
+            for(int x = -10; x < 10; x++) {
+                for(int y = -10; y < 10; y++) {
                     mapInfo.GetComponent<MapInfo>().CreateChunk(x, y);
                 }
             }

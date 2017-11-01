@@ -46,3 +46,5 @@ Thumbs.db
 *.chnk
 *.chnk.meta
 *.unity
+*.unity
+Assets/Level1.unity
