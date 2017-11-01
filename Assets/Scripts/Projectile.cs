@@ -11,9 +11,9 @@ public class Projectile : MonoBehaviour {
     Rigidbody rb;
     bool stopMissile = false;
     bool destroyBool = false;
-    LevelGrid levelGrid;
+  //  LevelGrid levelGrid;
     private void Awake() {
-        levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
+  //      levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
     }
     private void Start() {
         rb = GetComponent<Rigidbody>();

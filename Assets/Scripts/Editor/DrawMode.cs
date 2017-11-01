@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class DrawMode : EditorWindow {
 
-    public LevelGrid levelGrid;
+ //   public LevelGrid levelGrid;
 
     [MenuItem("Window/DrawMode")]
     static void Init() {
@@ -15,28 +15,28 @@ public class DrawMode : EditorWindow {
     }
 
     private void OnEnable() {
-        levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
+   //     levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
     }
 
 
     void OnGUI() {
         if(GUILayout.Button("Update Chunks")) {
-            levelGrid.UpdateChunks();
+     //       levelGrid.UpdateChunks();
         }
         if(GUILayout.Button("Save Chunk Data")) {
-            levelGrid.SaveLevelData();
+       //     levelGrid.SaveLevelData();
         }
         if(GUILayout.Button("Load Chunk Data")) {
-            levelGrid.LoadLevelData();
+        //    levelGrid.LoadLevelData();
         }
         if(GUILayout.Button("Generate Terrain"))
         {
-            levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
-            levelGrid.CreateChunks(5);
+       //     levelGrid = GameObject.Find("LevelGrid").GetComponent<LevelGrid>();
+       //     levelGrid.CreateChunks(5);
         }
 
         if(GUILayout.Button("ClearGrid")){
-            levelGrid.GUIClear();
+      //      levelGrid.GUIClear();
         }
 
 

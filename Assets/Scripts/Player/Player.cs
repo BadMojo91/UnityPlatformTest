@@ -21,7 +21,7 @@ public class Player : MonoBehaviour {
 
     public SpriteRenderer[] playerSprite;
 
-    public LevelGrid levelGrid;
+    //public LevelGrid levelGrid;
 
     public Vector2 currentBlock;
     public int currentChunkX, currentChunkY;
@@ -31,17 +31,17 @@ public class Player : MonoBehaviour {
         controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
 
         if(Input.GetButtonDown("Fire1"))
-            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
-              levelGrid.DestroyTileAt(levelGrid.chunks[currentChunkX,currentChunkY].GetComponent<Chunk>(),(int)currentBlock.x, (int)currentBlock.y);
+           // if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
+             // levelGrid.DestroyTileAt(levelGrid.chunks[currentChunkX,currentChunkY].GetComponent<Chunk>(),(int)currentBlock.x, (int)currentBlock.y);
 
         if(Input.GetButton("Fire2"))
         {
-            ReplaceAtMousePos(1);
+            //ReplaceAtMousePos(1);
         }
 
         
     }
-
+    /*
     void ReplaceAtMousePos(int tile)
     {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition) / levelGrid.TILE_SCALE;
@@ -91,7 +91,7 @@ public class Player : MonoBehaviour {
             return false;
         }
     }
-
+    */
     void FixedUpdate() {
         controller.MoveUpdate(this, legsAnim, transform, gun);
         controller.PhysicsUpdate(transform, GetComponent<Rigidbody>());
