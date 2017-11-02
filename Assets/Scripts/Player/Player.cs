@@ -24,17 +24,78 @@ public class Player : MonoBehaviour {
     public WorldData worldData;
 
     public Vector2 currentBlock;
+    public Vector2 currentBlockInChunk;
+    public Vector2 currentChunkPos;
     public GameObject currentChunk;
 
     private void Start() {
-        for(int x = 0; x < 10; x++) {
-            for(int y = 0; y < 10; y++) {
-                worldData.GetComponent<WorldData>().CreateChunk(x, y);
+        
+    }
+
+    void ChunkLoader() {
+        foreach(GameObject o in worldData.chunksLoaded) {
+            int x = 0;
+            if(o.transform.position.x >= 0) {
+                while(o.transform.position.x > 32) {
+                    x++;
+                }
             }
+            else {
+                while(o.transform.position.x < -32) {
+                    x--;
+                }
+            }
+
+
         }
     }
-    private void Update() {
+
+    void FindWorldPosition() {
+
+        int cx = 0, cy = 0, bx = 0, by = 0;
+        Vector2 chunkPos = Vector2.zero;
+
+        bx = (int)Mathf.Round(transform.position.x);
+        by = (int)Mathf.Round(transform.position.y);
+        cx = bx;
+        cy = by;
+
+        if(bx >= 0) {
+            while(cx > 32) {
+                cx -= 32;
+                chunkPos.x++;
+            }
+        }
+        else {
+            chunkPos.x--;
+            while(cx < -32) {
+                cx += 32;
+                chunkPos.x++;
+            }
+        }
+        if(by >= 0) {
+            while(cy > 32) {
+                cy -= 32;
+                chunkPos.y++;
+            }
+        }
+        else {
+            while(cy < -32) {
+                cy += 32;
+                chunkPos.y--;
+            }
+        }
+
+        currentBlock = new Vector2(bx, by);
+        currentBlockInChunk = new Vector2(cx, cy);
+        currentChunkPos = chunkPos;
+
+    }
+
+        private void Update() {
+        FindWorldPosition();
         controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
+        
 
         if(Input.GetButtonDown("Fire1"))
             if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
@@ -45,7 +106,7 @@ public class Player : MonoBehaviour {
             //ReplaceAtMousePos(1);
         }
 
-        
+
     }
     /*
     void ReplaceAtMousePos(int tile)
@@ -80,15 +141,29 @@ public class Player : MonoBehaviour {
             point = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
             int i = 0;
             int y = 0;
-            while(point.x >= 32) {
-                point.x -= 32;
-                i++;
+            if(hit.point.x >= 0) { 
+                while(point.x >= 32) {
+                    point.x -= 32;
+                    i++;
+                }
             }
+            else {
+                Debug.Log(hit + " " + point);
+                i--;
+                while(point.x <= -32) {
+                    point.x += 32;
+                    i--;
+                }
+            }
+
             while(point.y >= 32) {
                 point.y -= 32;
                 y++;
             }
             currentBlock = new Vector3((int)point.x, (int)point.y);
+            if(currentBlock.x < 0) {
+                currentBlock.x = 32 - (int)Mathf.Abs(currentBlock.x);
+            }
             Debug.Log(currentBlock);
             currentChunk = hit.collider.gameObject;
             return true;

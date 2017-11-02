@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-
+[ExecuteInEditMode]
 public class WorldData : MonoBehaviour {
     const int CHUNKSIZE = 32;
     const float TILESCALE = 1;
@@ -17,14 +17,22 @@ public class WorldData : MonoBehaviour {
     public Vector2 playerWorldChunkPos;
 
     public void Awake() {
-        for(int x = 0; x < 10; x++) {
-            for(int y = 0; y < 10; y++) {
-                CreateChunk(x, y);
-            }
-        }
+        RefreshList();
+        //for(int x = 0; x < 10; x++) {
+        //    for(int y = 0; y < 10; y++) {
+        //        CreateChunk(x, y);
+        //    }
+        //}
     }
-
+    int testInt = 0;
     public void Update() {
+        if(Input.GetButtonDown("Fire2")) {
+            for(int y = 0; y < 10; y++) {      
+                CreateChunk(testInt, y);
+            }
+            testInt--;
+            RefreshList();
+        }
         playerWorldPos.x = Mathf.Round(player.transform.position.x);
         playerWorldPos.y = Mathf.Round(player.transform.position.y);
         playerWorldChunkPos = new Vector2(Mathf.Round(playerWorldPos.x / CHUNKSIZE), Mathf.Round(playerWorldPos.y / CHUNKSIZE));
@@ -51,7 +59,16 @@ public class WorldData : MonoBehaviour {
             i++;
         }
     }
-
+    void RefreshList() {
+        chunksLoaded.Clear();
+        foreach(Transform chunk in transform) {
+            if(chunk.GetComponent<MeshBuilder>()) {
+                chunk.GetComponent<MeshBuilder>().BuildMesh();
+                chunk.GetComponent<MeshBuilder>().UpdateMesh();
+                chunksLoaded.Add(chunk.gameObject);
+            }
+        }
+    }
 
     public void LoadChunk(int x, int y) {
         if(GameObject.Find("Chunk_" + x + "," + y)) {
@@ -81,11 +98,24 @@ public class WorldData : MonoBehaviour {
             chunksLoaded.Add(newChunk);
         }
         newChunk.transform.position = new Vector3(x*CHUNKSIZE, y*CHUNKSIZE);
+        newChunk.GetComponent<MeshBuilder>().chunkPosition = new Vector2(x, y);
         newChunk.GetComponent<MeshBuilder>().BuildNewMesh();
         //newChunk.GetComponent<MeshBuilder>().LoadChunk();
         //newChunk.GetComponent<MeshBuilder>().BuildMesh();
         newChunk.GetComponent<MeshBuilder>().UpdateMesh();
         newChunk.GetComponent<MeshBuilder>().SaveToChunk();
+        bool existsInList = false;
+        foreach(GameObject o in chunksLoaded) {
+            if(o == null)
+                return;
+
+            if(o.name == newChunk.name) {
+                existsInList = true;
+                return;
+            }
+        }
+        if(!existsInList)
+            chunksLoaded.Add(newChunk);
 
     }
 

@@ -10,7 +10,7 @@ public class MeshBuilder : MonoBehaviour{
     
     const int CHUNKSIZE = 32;
     const float TILESCALE = 1;
-
+    public Vector2 chunkPosition;
     List<Vector2> uvs = new List<Vector2>();
     List<int> triangles = new List<int>();
     List<Vector3> vertices = new List<Vector3>();
@@ -106,8 +106,14 @@ public class MeshBuilder : MonoBehaviour{
                     AddTile(x, y, tiles[x, y].subMesh);
                 }
                 catch {
-                    Debug.LogError("AddTile: " + x + " " + y);
-                    return;
+                    try {
+                        LoadChunk();
+                        BuildMesh();
+                    }
+                    catch {
+                        Debug.LogError("AddTile: " + x + " " + y);
+                        return;
+                    }
                 }
             }
         }
