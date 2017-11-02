@@ -21,18 +21,24 @@ public class Player : MonoBehaviour {
 
     public SpriteRenderer[] playerSprite;
 
-    //public LevelGrid levelGrid;
+    public WorldData worldData;
 
     public Vector2 currentBlock;
-    public int currentChunkX, currentChunkY;
+    public GameObject currentChunk;
 
-   
+    private void Start() {
+        for(int x = 0; x < 10; x++) {
+            for(int y = 0; y < 10; y++) {
+                worldData.GetComponent<WorldData>().CreateChunk(x, y);
+            }
+        }
+    }
     private void Update() {
         controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
 
         if(Input.GetButtonDown("Fire1"))
-           // if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
-             // levelGrid.DestroyTileAt(levelGrid.chunks[currentChunkX,currentChunkY].GetComponent<Chunk>(),(int)currentBlock.x, (int)currentBlock.y);
+            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
+                currentChunk.GetComponent<MeshBuilder>().SetTile((int)currentBlock.x, (int)currentBlock.y, 0);
 
         if(Input.GetButton("Fire2"))
         {
@@ -65,25 +71,26 @@ public class Player : MonoBehaviour {
             levelGrid.CreateTileAt(levelGrid.chunks[cX,cY].GetComponent<Chunk>(), x, y, tile);
        // }
     }
+    */
     public bool TraceLine(Vector3 pos, Vector3 end) {
         RaycastHit hit;
         if(Physics.Raycast(pos, end, out hit)) {
-            Vector2 point = new Vector2(hit.point.x, hit.point.y) / levelGrid.TILE_SCALE;
+            Vector2 point = new Vector2(hit.point.x, hit.point.y);
             point += (new Vector2(hit.normal.x, hit.normal.y)) * -0.5f;
             point = new Vector2(Mathf.RoundToInt(point.x - 0.5f), Mathf.RoundToInt(point.y + 0.5f));
             int i = 0;
             int y = 0;
-            while(point.x >= levelGrid.MAX_CHUNK_SIZE) {
-                point.x -= levelGrid.MAX_CHUNK_SIZE;
+            while(point.x >= 32) {
+                point.x -= 32;
                 i++;
             }
-            while(point.y >= levelGrid.MAX_CHUNK_SIZE) {
-                point.y -= levelGrid.MAX_CHUNK_SIZE;
+            while(point.y >= 32) {
+                point.y -= 32;
                 y++;
             }
             currentBlock = new Vector3((int)point.x, (int)point.y);
-            currentChunkX = i;
-            currentChunkY = y;
+            Debug.Log(currentBlock);
+            currentChunk = hit.collider.gameObject;
             return true;
         }
         else {
@@ -91,7 +98,7 @@ public class Player : MonoBehaviour {
             return false;
         }
     }
-    */
+    
     void FixedUpdate() {
         controller.MoveUpdate(this, legsAnim, transform, gun);
         controller.PhysicsUpdate(transform, GetComponent<Rigidbody>());

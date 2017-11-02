@@ -6,10 +6,10 @@ using System.IO;
 
 [System.Serializable]
 public class MeshBuilder : MonoBehaviour{
-    public MapInfo mapInfo;
+    public WorldData worldData;
     
     const int CHUNKSIZE = 32;
-    const float TILESCALE = 0.64f;
+    const float TILESCALE = 1;
 
     List<Vector2> uvs = new List<Vector2>();
     List<int> triangles = new List<int>();
@@ -19,7 +19,7 @@ public class MeshBuilder : MonoBehaviour{
     SubMeshes[] subMeshes;
     int colCount = 0;
     int tileCount = 0;
-    Tile[,] tiles;
+    public Tile[,] tiles;
     
     Tile[] ConvertMultiToFlat(Tile[,] t) {
         Tile[] _tile = new Tile[CHUNKSIZE * CHUNKSIZE];
@@ -65,7 +65,7 @@ public class MeshBuilder : MonoBehaviour{
         for(int y = 0; y < CHUNKSIZE; y++) {
             for(int x = 0; x < CHUNKSIZE; x++, i++) {
                 
-                float perlinNoise = Mathf.PerlinNoise((offsetX + x) * mapInfo.reigon.frequency, (offsetY + y) * mapInfo.reigon.frequency) * mapInfo.reigon.amplitude;
+                float perlinNoise = Mathf.PerlinNoise((offsetX + x) * worldData.reigon.frequency, (offsetY + y) * worldData.reigon.frequency) * worldData.reigon.amplitude;
                 if(perlinNoise > 0.4f)
                     _tiles[x,y] = new Tile(x, y, 1);
                 else if(perlinNoise > 0.3f)
@@ -96,7 +96,7 @@ public class MeshBuilder : MonoBehaviour{
     }
     public void BuildMesh() {    //build mesh from tiles
         ClearMesh();
-        subMeshes = new SubMeshes[mapInfo.subMeshMaterial.Length];
+        subMeshes = new SubMeshes[worldData.submeshMaterial.materials.Length];
         for(int sm = 0; sm < subMeshes.Length; sm++) {
             subMeshes[sm].triangles = new List<int>();
         }
@@ -129,14 +129,14 @@ public class MeshBuilder : MonoBehaviour{
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         MeshCollider meshCollider = GetComponent<MeshCollider>();
-        mesh.subMeshCount = mapInfo.subMeshMaterial.Length;
+        mesh.subMeshCount = worldData.submeshMaterial.materials.Length;
         mesh.vertices = vertices.ToArray();
         for(int i = 0; i < mesh.subMeshCount; i++) {
             mesh.SetTriangles(subMeshes[i].triangles, i);
         }
         mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
-        meshRenderer.materials = mapInfo.subMeshMaterial;
+        meshRenderer.materials = worldData.submeshMaterial.materials;
         meshFilter.mesh = mesh;
 
         Mesh colMesh = new Mesh();
