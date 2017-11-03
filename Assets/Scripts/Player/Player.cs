@@ -29,19 +29,24 @@ public class Player : MonoBehaviour {
     public GameObject currentChunk;
 
     private void Start() {
-        
+        for(int y = 0; y < 5; y++) {
+            for(int x = 0; x < 5; x++) {
+                worldData.CreateChunk(x, y);
+            }
+        }
+        worldData.LoadChunks(5, 5);
     }
 
     void ChunkLoader() {
         foreach(GameObject o in worldData.chunksLoaded) {
             int x = 0;
             if(o.transform.position.x >= 0) {
-                while(o.transform.position.x > 32) {
+                while(o.transform.position.x > 15) {
                     x++;
                 }
             }
             else {
-                while(o.transform.position.x < -32) {
+                while(o.transform.position.x < -15) {
                     x--;
                 }
             }
