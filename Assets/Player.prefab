@@ -213,8 +213,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1814721143282732}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 36.632, y: 102.281, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4861968295732722}
@@ -532,6 +532,8 @@ MonoBehaviour:
   - {fileID: 212194528030294322}
   worldData: {fileID: 0}
   currentBlock: {x: 12, y: 62}
+  currentBlockInChunk: {x: 0, y: 0}
+  currentChunkPos: {x: 0, y: 0}
   currentChunk: {fileID: 0}
 --- !u!124 &124315644769380232
 Behaviour:

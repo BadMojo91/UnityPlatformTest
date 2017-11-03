@@ -4,34 +4,43 @@ using UnityEngine;
 using UnityEditor;
 
 public class MapEditor : EditorWindow {
-    public GameObject worldData;
+    public WorldData worldData;
     [MenuItem("Window/BadMojo/Map Editor")]
     static void Init() {
+       
         MapEditor window = (MapEditor)EditorWindow.GetWindow(typeof(MapEditor));
         window.Show();
     }
 
     private void OnGUI() {
-        worldData = (GameObject)EditorGUILayout.ObjectField(worldData, typeof(GameObject), true);
+        if(worldData == null)
+            worldData = GameObject.Find("World").GetComponent<WorldData>();
+
+        if(worldData.submeshMaterial.materials == null)
+            worldData.submeshMaterial.UpdateMaterials();
+
+        worldData = (WorldData)EditorGUILayout.ObjectField(worldData, typeof(WorldData), true);
         if(GUILayout.Button("Update Materials List")) {
-            worldData.GetComponent<WorldData>().submeshMaterial.UpdateMaterials();
+            worldData.submeshMaterial.UpdateMaterials();
         }
         if(GUILayout.Button("Generate Chunks")) {
-            for(int x = 0; x < 10; x++) {
-                for(int y = 0; y < 10; y++) {
-                    worldData.GetComponent<WorldData>().CreateChunk(x, y);
+            for(int y = 0; y < 5; y++) {
+                for(int x = 0; x < 5; x++) {
+                    worldData.CreateChunk(x, y);
                 }
             }
-            
+        }
+
+        if(GUILayout.Button("Generate Terrain")) {
+            worldData.GenTerrain();
+        }
+
+        if(GUILayout.Button("Save Chunks")) {
+            worldData.SaveChunks();
         }
 
         if(GUILayout.Button("Load Chunks")) {
-            for(int x = 0; x < 10; x++) {
-                for(int y = 0; y < 10; y++) {
-                    worldData.GetComponent<WorldData>().LoadChunk(x, y);
-                }
-            }
-
+            worldData.LoadChunks(5,5);
         }
     }
 }

@@ -16,7 +16,7 @@ public class MeshBuilder : MonoBehaviour{
     List<Vector3> vertices = new List<Vector3>();
     List<Vector3> colVerts = new List<Vector3>();
     List<int> colTri = new List<int>();
-    SubMeshes[] subMeshes;
+    public SubMeshes[] subMeshes;
     int colCount = 0;
     int tileCount = 0;
     public Tile[,] tiles;
@@ -30,58 +30,102 @@ public class MeshBuilder : MonoBehaviour{
             }
         }
         return _tile;
-    }
+    } //converts to single array, x and y must be same size
     Tile[,] ConvertFlatToMulti(Tile[] t) {
         Tile[,] _tiles = new Tile[CHUNKSIZE, CHUNKSIZE];
         foreach(Tile _t in t) {     
             _tiles[_t.x, _t.y] = new Tile(_t.x, _t.y, _t.subMesh);
         }     
         return _tiles;
-    }
+    } //converts to multidimentional array 
 
-    public void SaveToChunk() {
+    public void SaveChunk(string path) {
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream stream = File.Create(Application.dataPath + "/Chunks/" + gameObject.name + ".chnk");
+        DirectoryInfo folder = Directory.CreateDirectory(Application.dataPath + "/Chunks/" + path);
+        FileStream stream = File.Create(Application.dataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk");
         Tile[] _tiles = ConvertMultiToFlat(tiles);
         formatter.Serialize(stream, _tiles);
         stream.Close();
     }
-
-    public void LoadChunk() {
+    public void LoadChunk(string path) {
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream stream = File.Open(Application.dataPath + "/Chunks/" + gameObject.name + ".chnk", FileMode.Open);
+        FileStream stream = File.Open(Application.dataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk", FileMode.Open);
         Tile[] _tile = new Tile[CHUNKSIZE*CHUNKSIZE];
         _tile = (Tile[])formatter.Deserialize(stream);
         tiles = ConvertFlatToMulti(_tile);
         stream.Close();
     }
 
-    public void BuildNewMesh() {
-        //Chunk chunk;
+    Reigon ReigonComparitor(Reigon r1, Reigon r2, float amount) {
+        Reigon outcome = r1;
+        if(amount > 1.0f)
+            amount = 1.0f;
+        outcome.amplitude = Mathf.Lerp(r1.amplitude, r2.amplitude, amount);
+        outcome.frequency = Mathf.Lerp(r1.frequency, r2.frequency, amount);
+
+        return outcome;
+    }
+
+    public void InitChunk() {
+        ClearMesh();
+        Tile[,] _tiles = new Tile[CHUNKSIZE, CHUNKSIZE];
+        subMeshes = new SubMeshes[worldData.submeshMaterial.materials.Length];
+        for(int sm = 0; sm < subMeshes.Length; sm++) {
+            subMeshes[sm].triangles = new List<int>();
+        }
+        for(int y = 0; y < CHUNKSIZE; y++) {
+            for(int x = 0; x < CHUNKSIZE; x++) {
+                AddTile(x, y, 0);
+            }
+        }
+    } 
+
+    public void GenerateTerrain(Reigon _reigon) {
         Tile[,] _tiles = new Tile[CHUNKSIZE, CHUNKSIZE];
         float offsetX = transform.position.x / TILESCALE;
         float offsetY = transform.position.y / TILESCALE;
+        float frequency = _reigon.frequency;
+        float amplitude = _reigon.amplitude;
+        int octaves = _reigon.octaves;
+        float persistance = _reigon.persistance;
         int i = 0;
+
         for(int y = 0; y < CHUNKSIZE; y++) {
             for(int x = 0; x < CHUNKSIZE; x++, i++) {
-                
-                float perlinNoise = Mathf.PerlinNoise((offsetX + x) * worldData.reigon.frequency, (offsetY + y) * worldData.reigon.frequency) * worldData.reigon.amplitude;
+
+                //float perlinNoise = Mathf.PerlinNoise((offsetX + x) * frequency, (offsetY + y) * frequency) * amplitude + octave;
+                float perlinNoise = OctavePerlin(x, y, offsetX, offsetY, frequency, amplitude, octaves, persistance);
+               // Debug.Log(perlinNoise);
                 if(perlinNoise > 0.4f)
-                    _tiles[x,y] = new Tile(x, y, 1);
+                    _tiles[x, y] = new Tile(x, y, 1);
                 else if(perlinNoise > 0.3f)
                     _tiles[x, y] = new Tile(x, y, 2);
                 else if(perlinNoise > 0.2f)
                     _tiles[x, y] = new Tile(x, y, 3);
                 else
-                    _tiles[x,y] = new Tile(x, y, 0);
+                    _tiles[x, y] = new Tile(x, y, 0);
             }
         }
-        //chunk = new Chunk(_tiles);
+
         tiles = _tiles;
         BuildMesh();
+        UpdateMesh();
     }
-   
-    public void SetTile(int x, int y, int subMeshIndex) {
+    public float OctavePerlin(float x, float y, float offsetX, float offsetY, float frequency, float amplitude, int octaves, float persistence) {
+        float total = 0;
+        float maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
+        for(int i = 0; i < octaves; i++) {
+            total += Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+
+            maxValue += amplitude;
+
+            amplitude *= persistence;
+            frequency *= 2;
+        }
+
+        return total / maxValue;
+    }
+    public void SetTile(int x, int y, int subMeshIndex) { //sets tile at position to submesh material
         if(tiles == null) {
             Debug.LogError("SetTile: Mesh not ready");
             return;
@@ -90,7 +134,7 @@ public class MeshBuilder : MonoBehaviour{
         BuildMesh();
         UpdateMesh();
     }
-    public void BuildMesh(Tile[] tile) {    //build mesh from chunk
+    void BuildMesh(Tile[] tile) {    //build mesh from chunk
         tiles = ConvertFlatToMulti(tile);
         BuildMesh();
     }
@@ -105,20 +149,10 @@ public class MeshBuilder : MonoBehaviour{
                 try {
                     AddTile(x, y, tiles[x, y].subMesh);
                 }
-                catch {
-                    try {
-                        LoadChunk();
-                        BuildMesh();
-                    }
-                    catch {
-                        Debug.LogError("AddTile: " + x + " " + y);
-                        return;
-                    }
+                catch { return; }
                 }
-            }
         }
     }
-
     void ClearMesh() {
         colVerts.Clear();
         colTri.Clear();
@@ -129,7 +163,7 @@ public class MeshBuilder : MonoBehaviour{
         colCount = 0;
     }
 
-    public void UpdateMesh() {  
+    public void UpdateMesh() {
         
         Mesh mesh = new Mesh();
         MeshFilter meshFilter = GetComponent<MeshFilter>();
@@ -149,7 +183,7 @@ public class MeshBuilder : MonoBehaviour{
         colMesh.vertices = colVerts.ToArray();
         colMesh.triangles = colTri.ToArray();
         meshCollider.sharedMesh = colMesh;
-
+        //SaveChunk(worldData.worldName);
         ClearMesh();
     }
 
@@ -188,11 +222,9 @@ public class MeshBuilder : MonoBehaviour{
         
         tileCount++;
     }
-
     void AddSubMeshTriangles(int subMesh, List<int> t) {
             subMeshes[subMesh].triangles.AddRange(t);
     }
-
     private void ColTriangles() {
         colTri.Add(colCount * 4);
         colTri.Add((colCount * 4) + 1);
@@ -244,6 +276,7 @@ public class MeshBuilder : MonoBehaviour{
                 colCount++;
             }
     }
+    [System.Serializable]
     public struct SubMeshes {
         public List<int> triangles;
         public SubMeshes(List<int> t) {
