@@ -125,6 +125,10 @@ public class MeshBuilder : MonoBehaviour{
 
         return total / maxValue;
     }
+    public int ReturnTileType(int x, int y) {
+        int t = tiles[x, y].subMesh;
+        return t;
+    }
     public void SetTile(int x, int y, int subMeshIndex) { //sets tile at position to submesh material
         if(tiles == null) {
             Debug.LogError("SetTile: Mesh not ready");

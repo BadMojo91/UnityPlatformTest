@@ -37,32 +37,40 @@ public class WorldData : MonoBehaviour {
     }
     int testInt = 0;
     public void Update() {
-
+        ChunkUpdate(1);
         if(clearWorldGrid) {
             ClearWorldGrid();
         }
 
         if(player == null)
             player = GameObject.Find("Player");
-        if(Input.GetButtonDown("Fire2")) {
-            for(int y = 0; y < 10; y++) {      
-                CreateChunk(testInt, y);
-            }
-            testInt--;
-            RefreshList();
-        }
+
         playerWorldPos.x = Mathf.Round(player.transform.position.x);
         playerWorldPos.y = Mathf.Round(player.transform.position.y);
         playerWorldChunkPos = new Vector2(Mathf.Round(playerWorldPos.x / CHUNKSIZE), Mathf.Round(playerWorldPos.y / CHUNKSIZE));
-        UnloadChunks();
+        //UnloadChunks();
     }
-    public void ChunkUpdate() {
-        for(int x = 0; x < 10; x++) {
-            for(int y = 0; y < 10; y++) {
-                CreateChunk(x, y);
+    public void ChunkUpdate(int radius) {
+        int cX = (int)player.GetComponent<Player>().worldPosCurrentChunk.x;
+        int cY = (int)player.GetComponent<Player>().worldPosCurrentChunk.y;
+        int cXL = cX - radius;
+        int cXR = cX + radius;
+        int cYU = cY + radius;
+        int cYD = cY - radius;
+
+        foreach(GameObject c in chunksLoaded) {
+            Vector2 tempPos = c.GetComponent<MeshBuilder>().chunkPosition;
+            if(tempPos.x > cXR || tempPos.y > cYU || tempPos.x < cXL || tempPos.y < cYD) {
+                c.SetActive(false);
+            }
+            else {
+                c.SetActive(true);
             }
         }
     }
+
+    
+
     public void UnloadChunks() {
         if(EditorApplication.isPlaying) {
             int i = 0;

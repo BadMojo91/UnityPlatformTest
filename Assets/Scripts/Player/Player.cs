@@ -23,10 +23,13 @@ public class Player : MonoBehaviour {
 
     public WorldData worldData;
 
-    public Vector2 currentBlock;
-    public Vector2 currentBlockInChunk;
-    public Vector2 currentChunkPos;
-    public GameObject currentChunk;
+    //World coords
+    public Vector2 worldPosCurrentBlock;
+    public Vector2 worldPosCurrentChunk;
+    public Vector2 chunkPosCurrentBlock;
+    //Raycasting
+    public GameObject currentChunk; //current chunk traceline
+    public Vector2 currentBlock;    //current block in that chunk traceline
 
     private void Start() {
         for(int y = 0; y < 5; y++) {
@@ -91,32 +94,39 @@ public class Player : MonoBehaviour {
             }
         }
 
-        currentBlock = new Vector2(bx, by);
-        currentBlockInChunk = new Vector2(cx, cy);
-        currentChunkPos = chunkPos;
+        worldPosCurrentBlock = new Vector2(bx, by);
+        chunkPosCurrentBlock = new Vector2(cx, cy);
+        worldPosCurrentChunk = chunkPos;
 
     }
 
         private void Update() {
         FindWorldPosition();
         controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
-        
+
 
         if(Input.GetButtonDown("Fire1"))
-            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right)))
-                currentChunk.GetComponent<MeshBuilder>().SetTile((int)currentBlock.x, (int)currentBlock.y, 0);
+            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right))) {
+                int sm = currentChunk.GetComponent<MeshBuilder>().ReturnTileType((int)currentBlock.x, (int)currentBlock.y);
+                if(
+                    sm == 1 ||
+                    sm == 2
+                    )
+                    currentChunk.GetComponent<MeshBuilder>().SetTile((int)currentBlock.x, (int)currentBlock.y, 0);
 
+            }
         if(Input.GetButton("Fire2"))
         {
-            //ReplaceAtMousePos(1);
+            ReplaceAtMousePos(1);
+            
         }
 
 
     }
-    /*
+    
     void ReplaceAtMousePos(int tile)
     {
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition) / levelGrid.TILE_SCALE;
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0) * -0.5f;
         mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
 
@@ -126,18 +136,24 @@ public class Player : MonoBehaviour {
         int cX = 0;
         int cY = 0;
         //if(levelGrid.blocks[x + 1, y].subMesh != 0 || levelGrid.blocks[x - 1, y].subMesh != 0 || levelGrid.blocks[x, y + 1].subMesh != 0 || levelGrid.blocks[x, y - 1].subMesh != 0) {
-            while(x >= levelGrid.MAX_CHUNK_SIZE) {
-                x -= levelGrid.MAX_CHUNK_SIZE;
+            while(x >= 32) {
+                x -= 32;
                 cX++;
             }
-            while(y >= levelGrid.MAX_CHUNK_SIZE) {
-                y -= levelGrid.MAX_CHUNK_SIZE;
+            while(y >= 32) {
+                y -= 32;
                 cY++;
             }
-            levelGrid.CreateTileAt(levelGrid.chunks[cX,cY].GetComponent<Chunk>(), x, y, tile);
+        GameObject c = GameObject.Find("Chunk_" + cX + "," + cY);
+        if(c == null) {
+            worldData.CreateChunk(cX, cY);
+            c = GameObject.Find("Chunk_" + cX + "," + cY);
+        }
+        
+            c.GetComponent<MeshBuilder>().SetTile(x, y, tile);
        // }
     }
-    */
+
     public bool TraceLine(Vector3 pos, Vector3 end) {
         RaycastHit hit;
         if(Physics.Raycast(pos, end, out hit)) {

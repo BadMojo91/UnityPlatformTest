@@ -31,16 +31,12 @@ namespace protagonist {
             else
                 anim.SetBool("Moving", false);
 
-
-
-
             moveDirection = new Vector2(horizontal, DetectSlope(pl, horizontal));
             moveDirection = pl.TransformDirection(moveDirection) * walkSpeed;
 
             if((moveDirection.x > 0 && !Physics.Raycast(pl.position + (Vector3.down * 0.5f), Vector2.right, 0.3f)) || (moveDirection.x < 0 && !Physics.Raycast(pl.position + (Vector3.down * 0.5f), Vector2.left, 0.3f)))
                 pl.Translate(moveDirection * Time.deltaTime);
         }
-
         public void FlipX(bool b, Player player) {
 
             flipped = b;
@@ -48,7 +44,6 @@ namespace protagonist {
             foreach(SpriteRenderer s in player.playerSprite)
                 s.flipX = b;
         }
-
         public void PhysicsUpdate(Transform player, Rigidbody rb) {
 
             if(Input.GetButton("Jump") && canJump)
@@ -61,8 +56,6 @@ namespace protagonist {
                 canJump = false;
             }
         }
-
-
         float DetectSlope(Transform player, float hor) {
             RaycastHit2D[] hits = new RaycastHit2D[2];
             int h = Physics2D.RaycastNonAlloc(player.transform.position, -Vector2.up, hits); //cast downwards
@@ -81,7 +74,6 @@ namespace protagonist {
 
             return ySpeed;
         }
-
         public void RotateHandsWithMouseUpdate(Transform hands, Transform head, Player player) {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             if(flipped) {
