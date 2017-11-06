@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 
 public class MapEditor : EditorWindow {
-    public WorldData worldData;
+    WorldData worldData;
     [MenuItem("Window/BadMojo/Map Editor")]
     static void Init() {
        
@@ -13,13 +13,15 @@ public class MapEditor : EditorWindow {
     }
 
     private void OnGUI() {
-        if(worldData == null)
+        if(worldData == null) {
             worldData = GameObject.Find("World").GetComponent<WorldData>();
+        }
+        worldData = (WorldData)EditorGUILayout.ObjectField(worldData, typeof(WorldData), true);
 
         if(worldData.submeshMaterial.materials == null)
             worldData.submeshMaterial.UpdateMaterials();
 
-        worldData = (WorldData)EditorGUILayout.ObjectField(worldData, typeof(WorldData), true);
+            
         if(GUILayout.Button("Update Materials List")) {
             worldData.submeshMaterial.UpdateMaterials();
         }
@@ -40,7 +42,7 @@ public class MapEditor : EditorWindow {
         }
 
         if(GUILayout.Button("Load Chunks")) {
-            worldData.LoadChunks(5,5);
+            worldData.LoadChunks(5, 5);
         }
     }
 }

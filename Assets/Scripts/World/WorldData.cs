@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +7,7 @@ using System.Linq;
 public class WorldData : MonoBehaviour {
 
     public string worldName = "default";
-
+    public bool editMode;
     const int CHUNKSIZE = 32;
     const float TILESCALE = 1;
     public SubmeshMaterial submeshMaterial;
@@ -33,22 +33,29 @@ public class WorldData : MonoBehaviour {
 
     public void Start() {
         RefreshList();
-
     }
-    int testInt = 0;
+
     public void Update() {
-        ChunkUpdate(1);
+        if(!editMode)
+            ChunkUpdate(1);
+        else {
+            foreach(Transform _chunk in transform) {
+                if(_chunk != null && !_chunk.gameObject.activeSelf)
+                _chunk.gameObject.SetActive(true);
+            }
+        }
         if(clearWorldGrid) {
             ClearWorldGrid();
         }
 
-        if(player == null)
+        if(!editMode && player == null)
             player = GameObject.Find("Player");
 
-        playerWorldPos.x = Mathf.Round(player.transform.position.x);
-        playerWorldPos.y = Mathf.Round(player.transform.position.y);
-        playerWorldChunkPos = new Vector2(Mathf.Round(playerWorldPos.x / CHUNKSIZE), Mathf.Round(playerWorldPos.y / CHUNKSIZE));
-        //UnloadChunks();
+        if(!editMode) {
+            playerWorldPos.x = Mathf.Round(player.transform.position.x);
+            playerWorldPos.y = Mathf.Round(player.transform.position.y);
+            playerWorldChunkPos = new Vector2(Mathf.Round(playerWorldPos.x / CHUNKSIZE), Mathf.Round(playerWorldPos.y / CHUNKSIZE));
+        }
     }
     public void ChunkUpdate(int radius) {
         int cX = (int)player.GetComponent<Player>().worldPosCurrentChunk.x;
@@ -69,28 +76,14 @@ public class WorldData : MonoBehaviour {
         }
     }
 
-    
-
-    public void UnloadChunks() {
-        if(EditorApplication.isPlaying) {
-            int i = 0;
-            foreach(GameObject chunk in chunksLoaded) {
-                //GameObject chunk = chunksLoaded[1];
-                float dist = Vector3.Distance(player.transform.position, chunk.transform.position);
-                //if(Input.GetButtonDown("Fire1"))
-                //   Debug.Log(dist);
-                if(dist > 50) {
-
-                    chunk.SetActive(false);
-                }
-                else {
-                    chunk.SetActive(true);
-
-                }
-                i++;
+    public void GenerateChunks(int width, int height) {
+        for(int y = 0; y < height; y++) {
+            for(int x = 0; x < width; x++) {
+                CreateChunk(x, y);
             }
         }
     }
+   
     void RefreshList() {
         chunksLoaded.Clear();
         foreach(Transform chunk in transform) {
@@ -160,6 +153,34 @@ public class WorldData : MonoBehaviour {
         if(!existsInList)
             chunksLoaded.Add(newChunk);
 
+    }
+    public void ReplaceAtMousePos(int tile) {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0) * -0.5f;
+        mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
+
+        //Debug.Log(mousePos);
+        int x = (int)mousePos.x;
+        int y = (int)mousePos.y;
+        int cX = 0;
+        int cY = 0;
+        //if(levelGrid.blocks[x + 1, y].subMesh != 0 || levelGrid.blocks[x - 1, y].subMesh != 0 || levelGrid.blocks[x, y + 1].subMesh != 0 || levelGrid.blocks[x, y - 1].subMesh != 0) {
+        while(x >= 32) {
+            x -= 32;
+            cX++;
+        }
+        while(y >= 32) {
+            y -= 32;
+            cY++;
+        }
+        GameObject c = GameObject.Find("Chunk_" + cX + "," + cY);
+        if(c == null) {
+            CreateChunk(cX, cY);
+            c = GameObject.Find("Chunk_" + cX + "," + cY);
+        }
+
+        c.GetComponent<MeshBuilder>().SetTile(x, y, tile);
+        // }
     }
 
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
@@ -41,15 +41,27 @@ public class MeshBuilder : MonoBehaviour{
 
     public void SaveChunk(string path) {
         BinaryFormatter formatter = new BinaryFormatter();
+
+#if UNITY_STANDALONE
         DirectoryInfo folder = Directory.CreateDirectory(Application.dataPath + "/Chunks/" + path);
         FileStream stream = File.Create(Application.dataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk");
+#endif
+#if UNITY_ANDROID
+        DirectoryInfo folder = Directory.CreateDirectory(Application.persistentDataPath + "/Chunks/" + path);
+        FileStream stream = File.Create(Application.persistentDataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk");
+#endif
         Tile[] _tiles = ConvertMultiToFlat(tiles);
         formatter.Serialize(stream, _tiles);
         stream.Close();
     }
     public void LoadChunk(string path) {
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream stream = File.Open(Application.dataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk", FileMode.Open);
+#if UNITY_STANDALONE
+       FileStream stream = File.Open(Application.dataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk", FileMode.Open);
+#endif
+#if UNITY_ANDROID
+        FileStream stream = File.Open(Application.persistentDataPath + "/Chunks/" + path + "/" + gameObject.name + ".chnk", FileMode.Open);  
+#endif
         Tile[] _tile = new Tile[CHUNKSIZE*CHUNKSIZE];
         _tile = (Tile[])formatter.Deserialize(stream);
         tiles = ConvertFlatToMulti(_tile);
@@ -82,8 +94,8 @@ public class MeshBuilder : MonoBehaviour{
 
     public void GenerateTerrain(Reigon _reigon) {
         Tile[,] _tiles = new Tile[CHUNKSIZE, CHUNKSIZE];
-        float offsetX = transform.position.x / TILESCALE;
-        float offsetY = transform.position.y / TILESCALE;
+        float offsetX = transform.position.x;
+        float offsetY = transform.position.y;
         float frequency = _reigon.frequency;
         float amplitude = _reigon.amplitude;
         int octaves = _reigon.octaves;
@@ -115,7 +127,7 @@ public class MeshBuilder : MonoBehaviour{
         float total = 0;
         float maxValue = 0;  // Used for normalizing result to 0.0 - 1.0
         for(int i = 0; i < octaves; i++) {
-            total += Mathf.PerlinNoise(x * frequency, y * frequency) * amplitude;
+            total += Mathf.PerlinNoise(offsetX + x * frequency, offsetY + y * frequency) * amplitude;
 
             maxValue += amplitude;
 

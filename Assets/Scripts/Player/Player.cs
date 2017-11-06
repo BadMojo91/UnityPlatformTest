@@ -1,24 +1,19 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 using System.Collections;
-using protagonist;
 
+[System.Serializable]
+public class BodyParts {
+    public GameObject objLegs, objArms, objGun, objGunFlash, objHead;
+
+}
+[ExecuteInEditMode]
 public class Player : MonoBehaviour {
 
+    public BodyParts bodyParts;
     public Controller controller;
-    public Animator legsAnim;
-    public Animator gunAnim;
-    public SpriteRenderer headSprite;
-    public SpriteRenderer torsoSprite;
-    public SpriteRenderer armsSprite;
-    public SpriteRenderer gunSprite;
-    public SpriteRenderer legsSprite;
-    public Transform arms;
-    public Transform gun;
-    public Transform head;
-    public Animator gunFlash;
-
-    public GameObject bullet;
-
+    Animator legsAnim, gunFlash, gunAnim;
+    List<SpriteRenderer> playerSprites = new List<SpriteRenderer>();
     public SpriteRenderer[] playerSprite;
 
     public WorldData worldData;
@@ -31,15 +26,33 @@ public class Player : MonoBehaviour {
     public GameObject currentChunk; //current chunk traceline
     public Vector2 currentBlock;    //current block in that chunk traceline
 
+    private void Awake() { 
+        playerSprites.Add(GetComponent<SpriteRenderer>());                  //torso
+        playerSprites.Add(bodyParts.objLegs.GetComponent<SpriteRenderer>());//legs
+        legsAnim = bodyParts.objLegs.GetComponent<Animator>();
+        gunAnim = bodyParts.objGun.GetComponent<Animator>();
+        gunFlash = bodyParts.objGunFlash.GetComponent<Animator>();
+    }
+
     private void Start() {
         for(int y = 0; y < 5; y++) {
             for(int x = 0; x < 5; x++) {
                 worldData.CreateChunk(x, y);
             }
         }
+#if UNITY_ANDROID
+        worldData.GenTerrain();
+#endif
+#if UNITY_STANDALONE
         worldData.LoadChunks(5, 5);
+#endif
     }
 
+    public void FlipX(bool b) {
+        foreach(SpriteRenderer s in playerSprites) {
+            s.flipX = b;
+        }
+    }
     void ChunkLoader() {
         foreach(GameObject o in worldData.chunksLoaded) {
             int x = 0;
@@ -57,7 +70,6 @@ public class Player : MonoBehaviour {
 
         }
     }
-
     void FindWorldPosition() {
 
         int cx = 0, cy = 0, bx = 0, by = 0;
@@ -102,11 +114,11 @@ public class Player : MonoBehaviour {
 
         private void Update() {
         FindWorldPosition();
-        controller.RotateHandsWithMouseUpdate(arms, head, this); //head rotation
-
+        controller.RotateHandsWithMouseUpdate(bodyParts.objArms.transform, bodyParts.objHead.transform, this); //head rotation
+        FlipX(controller.flipped);
 
         if(Input.GetButtonDown("Fire1"))
-            if(TraceLine(transform.position, gun.transform.TransformDirection(Vector3.right))) {
+            if(TraceLine(transform.position, bodyParts.objGun.transform.TransformDirection(Vector3.right))) {
                 int sm = currentChunk.GetComponent<MeshBuilder>().ReturnTileType((int)currentBlock.x, (int)currentBlock.y);
                 if(
                     sm == 1 ||
@@ -196,7 +208,7 @@ public class Player : MonoBehaviour {
     }
     
     void FixedUpdate() {
-        controller.MoveUpdate(this, legsAnim, transform, gun);
+        controller.MoveUpdate(this, legsAnim, transform, bodyParts.objGun.transform);
         controller.PhysicsUpdate(transform, GetComponent<Rigidbody>());
     }
 
