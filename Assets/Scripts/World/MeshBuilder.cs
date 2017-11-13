@@ -146,9 +146,15 @@ public class MeshBuilder : MonoBehaviour{
             Debug.LogError("SetTile: Mesh not ready");
             return;
         }
-        tiles[x, y].subMesh = subMeshIndex;
-        BuildMesh();
-        UpdateMesh();
+        try {
+            tiles[x, y].subMesh = subMeshIndex;
+            BuildMesh();
+            UpdateMesh();
+        }
+        catch {
+            Debug.LogError("SetTile out of range:" + "X" + x + "Y" + y + transform.gameObject.name);
+            
+        }
     }
     void BuildMesh(Tile[] tile) {    //build mesh from chunk
         tiles = ConvertFlatToMulti(tile);
@@ -211,8 +217,8 @@ public class MeshBuilder : MonoBehaviour{
     }
     void AddVerts(float x, float y) {
         float i = TILESCALE;
-        x = x * TILESCALE;
-        y = y * TILESCALE;
+        x = x * TILESCALE -0.5f;
+        y = y * TILESCALE +0.5f;
         vertices.Add(new Vector2(x, y));
         vertices.Add(new Vector2(x + i, y));
         vertices.Add(new Vector2(x + i, y - i));
@@ -252,8 +258,8 @@ public class MeshBuilder : MonoBehaviour{
     private void GenerateCollider(int posX, int posY) {
 
         float i = TILESCALE;
-        float x = posX * TILESCALE;
-        float y = posY * TILESCALE;
+        float x = posX * TILESCALE -0.5f;
+        float y = posY * TILESCALE +0.5f;
         
         if(posY + 1 >= CHUNKSIZE || tiles[posX, posY + 1].subMesh == 0) { 
             //Top

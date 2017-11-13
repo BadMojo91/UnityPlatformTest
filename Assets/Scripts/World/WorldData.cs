@@ -10,6 +10,7 @@ public class WorldData : MonoBehaviour {
     public bool editMode;
     const int CHUNKSIZE = 32;
     const float TILESCALE = 1;
+    public int MAXCHUNKHEIGHT = 8;
     public SubmeshMaterial submeshMaterial;
 
     public Reigon[] reigons;
@@ -57,6 +58,10 @@ public class WorldData : MonoBehaviour {
             playerWorldChunkPos = new Vector2(Mathf.Round(playerWorldPos.x / CHUNKSIZE), Mathf.Round(playerWorldPos.y / CHUNKSIZE));
         }
     }
+    /// <summary>
+    /// Enables chunks around player, disables chunks outside of radius 
+    /// </summary>
+    /// <param name="radius">How many chunks to load</param>
     public void ChunkUpdate(int radius) {
         int cX = (int)player.GetComponent<Player>().worldPosCurrentChunk.x;
         int cY = (int)player.GetComponent<Player>().worldPosCurrentChunk.y;
@@ -76,15 +81,23 @@ public class WorldData : MonoBehaviour {
         }
     }
 
-    public void GenerateChunks(int width, int height) {
-        for(int y = 0; y < height; y++) {
-            for(int x = 0; x < width; x++) {
+    /// <summary>
+    /// Creates initial chunks between xPos1 and xPos2.
+    /// </summary>
+    /// <param name="xPos1">First position</param>
+    /// <param name="xPos2">Second Position</param>
+    public void GenerateChunks(int xPos1, int xPos2) {
+        for(int y = 0; y < MAXCHUNKHEIGHT; y++) {
+            for(int x = xPos1; x < xPos2; x++) {
                 CreateChunk(x, y);
             }
         }
     }
-   
-    void RefreshList() {
+    /// <summary>
+    /// Clears chunksLoaded list, cycles through each Chunk in World, calls 
+    /// BuildMesh and UpdateMesh for each one and then re-adds to the list. 
+    /// </summary>
+    public void RefreshList() {
         chunksLoaded.Clear();
         foreach(Transform chunk in transform) {
             if(chunk.GetComponent<MeshBuilder>()) {
@@ -94,22 +107,32 @@ public class WorldData : MonoBehaviour {
             }
         }
     }
+    /// <summary>
+    /// Generates terrain from loaded chunks.
+    /// </summary>
     public void GenTerrain() {
         for(int i = 0; i < chunksLoaded.Count; i++) {
             chunksLoaded[i].GetComponent<MeshBuilder>().GenerateTerrain(reigons[0]);
         }
     }
-
+    /// <summary>
+    /// Saves all loaded chunks to current world directory.
+    /// </summary>
     public void SaveChunks() {
         for(int i = 0; i < chunksLoaded.Count; i++) {
             chunksLoaded[i].GetComponent<MeshBuilder>().SaveChunk(worldName);
         }
     }
-
-    public void LoadChunks(int width, int height) {
+    /// <summary>
+    /// Loads chunks between xPos1 and xPos2 from current world directory.
+    /// 
+    /// </summary>
+    /// <param name="xPos1">First position of chunks to load</param>
+    /// <param name="xPos2">Second position of chunks to load</param>
+    public void LoadChunks(int xPos1, int xPos2) {
         ClearWorldGrid();
-        for(int y = 0; y < height; y++) {
-            for(int x = 0; x < width; x++) {
+        for(int y = 0; y < MAXCHUNKHEIGHT; y++) {
+            for(int x = xPos1; x < xPos2; x++) {
                 CreateChunk(x, y);
             }
         }
@@ -119,6 +142,11 @@ public class WorldData : MonoBehaviour {
             chunksLoaded[i].GetComponent<MeshBuilder>().UpdateMesh();
         }
     }
+    /// <summary>
+    /// Creates an air chunk (all tiles submesh 0) at position x and y and adds to chunksLoaded list.
+    /// </summary>
+    /// <param name="x">X position</param>
+    /// <param name="y">Y position</param>
     public void CreateChunk(int x, int y) { //just create a fresh chunk
         GameObject newChunk;
         if(GameObject.Find("Chunk_" + x + "," + y))
@@ -154,25 +182,38 @@ public class WorldData : MonoBehaviour {
             chunksLoaded.Add(newChunk);
 
     }
+    /// <summary>
+    /// Sets tile at position of mouse.
+    /// </summary>
+    /// <param name="tile">Submesh number</param>
     public void ReplaceAtMousePos(int tile) {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //Debug.Log(mousePos);
         mousePos += new Vector3(mousePos.normalized.x, mousePos.normalized.y, 0) * -0.5f;
-        mousePos = new Vector3(Mathf.RoundToInt(mousePos.x - 0.5f), Mathf.RoundToInt(mousePos.y + 0.5f), 0);
-
+        //Debug.Log(mousePos);
+        mousePos = new Vector3(Mathf.RoundToInt(mousePos.x), Mathf.RoundToInt(mousePos.y), 0);
         //Debug.Log(mousePos);
         int x = (int)mousePos.x;
         int y = (int)mousePos.y;
         int cX = 0;
         int cY = 0;
-        //if(levelGrid.blocks[x + 1, y].subMesh != 0 || levelGrid.blocks[x - 1, y].subMesh != 0 || levelGrid.blocks[x, y + 1].subMesh != 0 || levelGrid.blocks[x, y - 1].subMesh != 0) {
         while(x >= 32) {
             x -= 32;
             cX++;
+        }
+        while(x <= -32) {
+            x += 32;
+            cX--;
         }
         while(y >= 32) {
             y -= 32;
             cY++;
         }
+        if(x < 0) {
+            x = 32 - Mathf.Abs(x);
+            cX -= 1; //Chunk position correction
+        }
+        Debug.Log("X: " + x + " Y: " + y + "Chunk: " + cX + "," + cY);
         GameObject c = GameObject.Find("Chunk_" + cX + "," + cY);
         if(c == null) {
             CreateChunk(cX, cY);

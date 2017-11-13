@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class MapEditor : EditorWindow {
+public class MapGenerator : EditorWindow {
     WorldData worldData;
     [MenuItem("Window/BadMojo/Map Editor")]
     static void Init() {
        
-        MapEditor window = (MapEditor)EditorWindow.GetWindow(typeof(MapEditor));
+        MapGenerator window = (MapGenerator)EditorWindow.GetWindow(typeof(MapGenerator));
         window.Show();
     }
 
